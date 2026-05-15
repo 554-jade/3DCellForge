@@ -12,6 +12,8 @@ node_modules
 dist
 dist-ssr
 .generated-models
+.claude
+.worktrees
 test-results
 playwright-report
 *.local

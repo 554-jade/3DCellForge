@@ -1,5 +1,19 @@
 export const ASSET_CATEGORIES = [
   {
+    id: 'dinosaur',
+    label: 'Dinosaur Atlas',
+    motionProfile: 'dinosaur',
+    sceneProfile: 'dinosaur',
+    keywords: ['dinosaur', 'tyrannosaurus', 'trex', 't rex', 't-rex', 'triceratops', 'velociraptor', 'pterosaur', 'fossil', 'skeleton', '恐龙', '霸王龙', '三角龙', '迅猛龙', '翼龙', '化石', '骨架'],
+    strongKeywords: ['tyrannosaurus', 't rex', 't-rex', 'triceratops', 'velociraptor', '恐龙', '霸王龙', '三角龙', '迅猛龙'],
+    material: 'Bone, fossil texture, scale cues, teeth, claws, and skeletal silhouette',
+    scale: 'Museum atlas specimen',
+    inspectionFocus: 'skull, teeth, rib cage, limbs, tail balance',
+    description: 'A dinosaur or fossil-style subject where the demo should feel like a guided digital atlas rather than a generic model viewer.',
+    value: 'Use a dramatic exhibit stage, label tabs, guided rotation, and friendly narration to make the object feel educational and memorable.',
+    tags: ['dinosaur', 'atlas', 'museum', 'fossil', 'guided lesson'],
+  },
+  {
     id: 'artifact',
     label: 'Museum Artifact',
     motionProfile: 'artifact',
@@ -128,6 +142,13 @@ export const SCENE_PROFILES = {
     environment: 'lab orbit',
     badges: ['rim light', 'inspection', 'soft volume'],
   },
+  dinosaur: {
+    id: 'dinosaur',
+    label: 'Dinosaur Atlas',
+    summary: 'Blue exhibit chamber, fossil spotlight, and classroom narration.',
+    environment: 'atlas exhibit',
+    badges: ['guided atlas', 'fossil light', 'story mode'],
+  },
 }
 
 export function getAssetIntelligence(cell = {}) {
@@ -202,6 +223,10 @@ function applyCategoryOverrides(entry, primaryText) {
 
   if (entry.rule.id === 'artifact' && hasKeyword(primaryText, ['sanxingdui', '三星堆', 'bronze mask', 'gold mask', '青铜人头像', '戴金面罩'])) {
     return { ...entry, score: score + 28 }
+  }
+
+  if (entry.rule.id === 'dinosaur' && hasKeyword(primaryText, ['dinosaur', 'tyrannosaurus', 't rex', 't-rex', '恐龙', '霸王龙'])) {
+    return { ...entry, score: score + 34 }
   }
 
   return entry

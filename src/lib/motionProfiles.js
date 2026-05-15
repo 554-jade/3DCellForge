@@ -7,6 +7,12 @@ const MOTION_PROFILES = {
     durationMs: 9000,
     description: 'Dark-gallery turntable with close material inspection for artifacts.',
   },
+  dinosaur: {
+    id: 'dinosaur',
+    label: 'Atlas exhibit',
+    durationMs: 8400,
+    description: 'Guided exhibit sweep with fossil-stage spotlighting for dinosaur subjects.',
+  },
   road: {
     id: 'road',
     label: 'Road push-in',

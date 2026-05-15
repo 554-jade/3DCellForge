@@ -31,11 +31,22 @@ const DEFAULT_RELIEF_CAMERA_POSITION = [0, 0.18, 5.35]
 const DEFAULT_CAMERA_TARGET = [0, 0, 0]
 const PRESENTATION_DURATION_BY_PROFILE = {
   artifact: 9000,
+  dinosaur: 8400,
   road: 7800,
   aircraft: 7200,
   vessel: 8600,
   specimen: 8200,
   product: 7600,
+}
+
+const PRESENTATION_SCALE_BY_PROFILE = {
+  artifact: 0.78,
+  dinosaur: 0.72,
+  road: 0.7,
+  aircraft: 0.98,
+  vessel: 0.66,
+  specimen: 0.74,
+  product: 0.74,
 }
 
 function smoothPingPong(elapsed, durationMs) {
@@ -61,6 +72,7 @@ function resetTransform(object) {
 
 function PresentationMotionRig({
   enabled,
+  playing = true,
   motionProfile = 'product',
   targetRef,
   defaultCameraPosition = DEFAULT_CELL_CAMERA_POSITION,
@@ -86,16 +98,26 @@ function PresentationMotionRig({
   }, [camera, defaultCameraPosition, defaultTarget, enabled, targetRef])
 
   useFrame(({ clock }) => {
-    if (!enabled || !targetRef.current) return
+    if (!enabled || !playing || !targetRef.current) return
 
     const { sweep, wave, lift } = smoothPingPong(clock.elapsedTime, PRESENTATION_DURATION_BY_PROFILE[motionProfile] || DEFAULT_PRESENTATION_DURATION)
+    const baseScale = PRESENTATION_SCALE_BY_PROFILE[motionProfile] || 0.74
     const root = targetRef.current
 
     if (motionProfile === 'artifact') {
       root.position.set(wave * 0.035, -0.03 + lift * 0.01, 0.02 - sweep * 0.1)
       root.rotation.set(-0.06 + lift * 0.012, -0.74 + sweep * 1.48, wave * 0.01)
-      root.scale.setScalar(1.02 + sweep * 0.05)
-      camera.position.set(1.05 + wave * 0.36, 0.74 + lift * 0.035, 4.78 - sweep * 0.32)
+      root.scale.setScalar(baseScale * (1.02 + sweep * 0.05))
+      camera.position.set(1.05 + wave * 0.36, 0.74 + lift * 0.035, 5.42 - sweep * 0.24)
+      lookAt(camera, [0, 0.08, 0])
+      return
+    }
+
+    if (motionProfile === 'dinosaur') {
+      root.position.set(wave * 0.04, -0.02 + lift * 0.012, 0.04 - sweep * 0.14)
+      root.rotation.set(-0.1 + lift * 0.018, -0.68 + sweep * 1.36, wave * 0.012)
+      root.scale.setScalar(baseScale * (1.02 + sweep * 0.04))
+      camera.position.set(1.35 + wave * 0.28, 0.68 + lift * 0.04, 5.5 - sweep * 0.24)
       lookAt(camera, [0, 0.08, 0])
       return
     }
@@ -103,26 +125,26 @@ function PresentationMotionRig({
     if (motionProfile === 'road') {
       root.position.set(wave * 0.08, -0.08 + wave * 0.018, -0.7 + sweep * 1.12)
       root.rotation.set(-0.09 + lift * 0.01, -0.34 + sweep * 0.52, wave * 0.012)
-      root.scale.setScalar(0.9 + sweep * 0.18)
-      camera.position.set(2.45 - sweep * 0.72, 0.62 + wave * 0.05, 4.92 - sweep * 0.42)
+      root.scale.setScalar(baseScale * (0.9 + sweep * 0.18))
+      camera.position.set(2.45 - sweep * 0.72, 0.62 + wave * 0.05, 5.55 - sweep * 0.3)
       lookAt(camera, [0, 0.02, 0.08 + sweep * 0.2])
       return
     }
 
     if (motionProfile === 'aircraft') {
-      root.position.set(-0.82 + sweep * 1.64, 0.2 + wave * 0.18, -0.14 + sweep * 0.22)
-      root.rotation.set(-0.08 + wave * 0.04, -0.82 + sweep * 1.42, -wave * 0.32)
-      root.scale.setScalar(0.92 + sweep * 0.1)
-      camera.position.set(2.65 - sweep * 1.08, 1.46 + lift * 0.06, 5.04 - sweep * 0.34)
-      lookAt(camera, [root.position.x * 0.32, 0.08 + root.position.y * 0.22, -0.08])
+      root.position.set(-0.52 + sweep * 1.04, 0.18 + wave * 0.14, -0.08 + sweep * 0.14)
+      root.rotation.set(-0.1 + wave * 0.035, -0.72 + sweep * 1.14, -wave * 0.26)
+      root.scale.setScalar(baseScale * (0.94 + sweep * 0.08))
+      camera.position.set(1.88 - sweep * 0.68, 1.14 + lift * 0.05, 4.72 - sweep * 0.2)
+      lookAt(camera, [root.position.x * 0.22, 0.1 + root.position.y * 0.18, -0.1])
       return
     }
 
     if (motionProfile === 'vessel') {
       root.position.set(-0.62 + sweep * 1.24, -0.05 + wave * 0.008, 0.02)
       root.rotation.set(-0.035, -0.2 + sweep * 0.4, wave * 0.006)
-      root.scale.setScalar(1)
-      camera.position.set(4.45 - sweep * 1.42, 1.04 + lift * 0.025, 5.28)
+      root.scale.setScalar(baseScale)
+      camera.position.set(4.45 - sweep * 1.42, 1.04 + lift * 0.025, 5.92)
       lookAt(camera, [0.05, 0.04, 0])
       return
     }
@@ -130,16 +152,16 @@ function PresentationMotionRig({
     if (motionProfile === 'specimen') {
       root.position.set(wave * 0.05, lift * 0.018, 0.06 - sweep * 0.12)
       root.rotation.set(-0.12 + lift * 0.035, -0.54 + sweep * 1.08, wave * 0.025)
-      root.scale.setScalar(1)
-      camera.position.set(wave * 0.42, 0.32 + lift * 0.035, 5.55 - sweep * 0.58)
+      root.scale.setScalar(baseScale)
+      camera.position.set(wave * 0.42, 0.32 + lift * 0.035, 6.1 - sweep * 0.34)
       lookAt(camera, [0, 0.08, 0])
       return
     }
 
     root.position.set(wave * 0.04, lift * 0.02, 0.08 - sweep * 0.18)
     root.rotation.set(-0.08 + lift * 0.02, -0.48 + sweep * 0.96, wave * 0.018)
-    root.scale.setScalar(1)
-    camera.position.set(0.82 + wave * 0.58, 0.56 + lift * 0.04, 5.2 - sweep * 0.44)
+    root.scale.setScalar(baseScale)
+    camera.position.set(0.82 + wave * 0.58, 0.56 + lift * 0.04, 5.84 - sweep * 0.28)
     lookAt(camera, [0, 0.06, 0])
   })
 
@@ -298,6 +320,30 @@ function PresentationEnvironment({ profile }) {
           <mesh key={radius} position={[0, -1.25 + index * 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <torusGeometry args={[radius, 0.006, 8, 128]} />
             <meshBasicMaterial color="#c7923a" transparent opacity={0.26 - index * 0.05} depthWrite={false} />
+          </mesh>
+        ))}
+      </group>
+    )
+  }
+
+  if (profile === 'dinosaur') {
+    return (
+      <group>
+        <spotLight position={[0, 4.6, 3.1]} angle={0.44} penumbra={0.7} intensity={4.4} color="#9ddcff" />
+        <pointLight position={[-2.8, 1.1, 1.8]} intensity={1.3} color="#6d5cff" />
+        <pointLight position={[2.8, 1.3, 1.2]} intensity={1.1} color="#22d3ee" />
+        <mesh position={[0, -1.44, 0]} receiveShadow>
+          <cylinderGeometry args={[1.58, 1.82, 0.24, 96]} />
+          <meshStandardMaterial color="#142a63" metalness={0.18} roughness={0.42} />
+        </mesh>
+        <mesh position={[0, -1.28, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[1.72, 96]} />
+          <meshBasicMaterial color="#3ee7ff" transparent opacity={0.16} depthWrite={false} />
+        </mesh>
+        {[1.65, 2.08, 2.5].map((radius, index) => (
+          <mesh key={radius} position={[0, -1.24 + index * 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[radius, 0.008, 8, 128]} />
+            <meshBasicMaterial color={index % 2 ? '#7c6dff' : '#39d6ff'} transparent opacity={0.24 - index * 0.04} depthWrite={false} />
           </mesh>
         ))}
       </group>
@@ -1332,11 +1378,14 @@ export function CinematicLayerVisual({ imageUrl, selectedOrganelle, onSelectOrga
   )
 }
 
-export function CellScene({ selectedCell, modelCellId, referenceImageUrl, generatedModelUrl, selectedOrganelle, crossSection, autoRotate, hideOthers, proofMode, viewMode = 'layers', renderQuality, presentationMode = false, motionProfile = 'specimen', onSelectOrganelle, onExporterReady = null }) {
+export function CellScene({ selectedCell, modelCellId, referenceImageUrl, generatedModelUrl, selectedOrganelle, crossSection, autoRotate, hideOthers, proofMode, viewMode = 'layers', renderQuality, presentationMode = false, presentationPlaying = true, transparentBackground = false, motionProfile = 'specimen', canvasFallback, onSelectOrganelle, onExporterReady = null }) {
   const isPlant = modelCellId === 'plant'
   const presentationRoot = useRef(null)
   const exportRoot = useRef(null)
   const dpr = renderQuality === 'high' ? [1, 2] : [1, 1.4]
+  const fallback = canvasFallback === undefined
+    ? <CellFallback selectedCell={selectedCell} modelCellId={modelCellId} referenceImageUrl={referenceImageUrl} selectedOrganelle={selectedOrganelle} onSelectOrganelle={onSelectOrganelle} />
+    : canvasFallback
 
   if (!canUseWebGL()) return null
 
@@ -1350,9 +1399,9 @@ export function CellScene({ selectedCell, modelCellId, referenceImageUrl, genera
         gl.toneMapping = THREE.ACESFilmicToneMapping
         gl.toneMappingExposure = 1.08
       }}
-      fallback={<CellFallback selectedCell={selectedCell} modelCellId={modelCellId} referenceImageUrl={referenceImageUrl} selectedOrganelle={selectedOrganelle} onSelectOrganelle={onSelectOrganelle} />}
+      fallback={fallback}
     >
-      {!presentationMode && <color attach="background" args={['#f5efdf']} />}
+      {!presentationMode && !transparentBackground && <color attach="background" args={['#f5efdf']} />}
       <ambientLight intensity={0.82} />
       <directionalLight castShadow position={[4, 5, 5]} intensity={3.4} color="#fff7ed" shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-4.5, 2.6, 3]} intensity={1.65} color="#dbeafe" />
@@ -1360,7 +1409,7 @@ export function CellScene({ selectedCell, modelCellId, referenceImageUrl, genera
       <pointLight position={[-2.4, 1.2, 1.6]} intensity={0.75} color="#b8f7a6" />
       {proofMode && <ProofRig />}
       {presentationMode && <PresentationEnvironment profile={motionProfile} />}
-      <PresentationMotionRig enabled={presentationMode} motionProfile={motionProfile} targetRef={presentationRoot} />
+      <PresentationMotionRig enabled={presentationMode} playing={presentationPlaying} motionProfile={motionProfile} targetRef={presentationRoot} />
       <group ref={presentationRoot}>
         <group ref={exportRoot} name={`${selectedCell}-model-export-root`}>
           {generatedModelUrl ? (

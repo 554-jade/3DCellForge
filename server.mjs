@@ -7,6 +7,7 @@ import { createFalTask, getFalHealth, getFalTask } from './server/providers/fal.
 import { createHunyuanTask, getHunyuanHealth, getHunyuanTask } from './server/providers/hunyuan.mjs'
 import { createRodinTask, getRodinHealth, getRodinTask } from './server/providers/rodin.mjs'
 import { createTripoTask, getTripoHealth, getTripoTask } from './server/providers/tripo.mjs'
+import { createShowcaseSpeech, getTtsHealth } from './server/providers/tts.mjs'
 import { analyzeAssetImage, getVisionHealth } from './server/providers/vision.mjs'
 
 const DEFAULT_GENERATION_PROVIDER = 'rodin'
@@ -43,6 +44,7 @@ const server = http.createServer(async (request, response) => {
           hunyuan: getHunyuanHealth(),
           fal: getFalHealth(),
           vision: getVisionHealth(),
+          tts: getTtsHealth(),
         },
       }
       sendJson(response, 200, payload)
@@ -73,6 +75,28 @@ const server = http.createServer(async (request, response) => {
         configured: insight.configured,
         status: insight.status,
         categoryId: insight.categoryId,
+        durationMs: Date.now() - startedAt,
+      })
+      return
+    }
+
+    if (request.method === 'POST' && url.pathname === '/api/tts/showcase') {
+      const payload = await readJsonBody(request)
+      await logEvent('info', 'tts.create.start', {
+        requestId,
+        language: payload.language,
+        textChars: typeof payload.text === 'string' ? payload.text.length : 0,
+      })
+      const speech = await createShowcaseSpeech(payload)
+
+      sendJson(response, 200, speech)
+      await logEvent('info', 'tts.create.success', {
+        requestId,
+        provider: speech.provider,
+        model: speech.model,
+        voice: speech.voice,
+        language: speech.language,
+        audioBytes: Math.round((speech.audioBase64.length * 3) / 4),
         durationMs: Date.now() - startedAt,
       })
       return
@@ -179,6 +203,10 @@ server.listen(API_PORT, API_HOST, () => {
   console.log(RODIN_API_KEY ? 'Rodin API key loaded from environment.' : 'RODIN_API_KEY is missing. Add it to .env.local.')
   console.log(FAL_API_KEY ? 'Fal API key loaded from environment.' : 'FAL_API_KEY is missing. Add it to .env.local.')
   console.log(getVisionHealth().configured ? 'Vision analysis provider configured.' : 'Vision analysis is not configured. Add OPENAI_API_KEY to .env.local.')
+  {
+    const ttsHealth = getTtsHealth()
+    console.log(ttsHealth.configured ? `TTS provider configured: ${ttsHealth.provider}.` : 'TTS is not configured. Add OPENAI_TTS_API_KEY or install/configure Edge TTS.')
+  }
   console.log(`Hunyuan3D local provider: ${HUNYUAN_API_BASE}`)
   logEvent('info', 'api.start', {
     host: API_HOST,
@@ -189,6 +217,7 @@ server.listen(API_PORT, API_HOST, () => {
       fal: Boolean(FAL_API_KEY),
       hunyuan: Boolean(HUNYUAN_API_BASE),
       vision: getVisionHealth().configured,
+      tts: getTtsHealth().configured,
     },
   })
 })

@@ -90,10 +90,22 @@ TRIPO_API_KEY=your_tripo_key
 FAL_API_KEY=your_fal_key
 RODIN_API_KEY=your_rodin_api_key
 OPENAI_API_KEY=your_openai_key
+TTS_PROVIDER=auto
+OPENAI_TTS_API_KEY=your_openai_key
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=marin
+EDGE_TTS_COMMAND=edge-tts
 API_HOST=127.0.0.1
 ```
 
-`OPENAI_API_KEY` enables optional image understanding through `/api/3d/analyze`. When configured, uploads are classified by vision into asset type, material focus, inspection notes, scene profile, tags, and a better image-to-3D prompt. Without it, the app keeps using local filename/metadata heuristics.
+`OPENAI_API_KEY` enables optional image understanding through `/api/3d/analyze`. Showcase narration is handled by `/api/tts/showcase` with `TTS_PROVIDER=auto`: it uses OpenAI TTS when `OPENAI_TTS_API_KEY`, `VOICE_TOOLS_OPENAI_KEY`, or `OPENAI_API_KEY` is available; otherwise it calls an externally installed Edge TTS command. If both server TTS paths fail, the browser speech fallback is still used.
+
+Edge TTS is intentionally **not bundled as a project dependency**. To use the free Edge path, install the CLI in your own environment:
+
+```bash
+pipx install edge-tts
+# or: pip install edge-tts
+```
 
 For Hunyuan3D local backup mode, start your local Hunyuan3D API server and set:
 

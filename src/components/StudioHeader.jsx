@@ -1,35 +1,17 @@
-import { BookOpen, Box, ChevronDown, Grid3X3, Library, MonitorPlay, ScrollText, Settings } from 'lucide-react'
+import { BookOpen, Box, ChevronDown, Globe2, Grid3X3, Library, MonitorPlay, ScrollText, Settings } from 'lucide-react'
 
-const HEADER_TEXT = {
-  en: {
-    title: '3D Model Studio',
-    subtitle: 'Generate, inspect, and present 3D assets',
-    Gallery: 'Gallery',
-    Library: 'Library',
-    Notebooks: 'Notebooks',
-    Logs: 'Logs',
-    Settings: 'Settings',
-    Demo: 'Demo',
-  },
-  zh: {
-    title: '3D模型工作室',
-    subtitle: '生成、检查和演示3D模型',
-    Gallery: '作品集',
-    Library: '模型库',
-    Notebooks: '笔记',
-    Logs: '日志',
-    Settings: '设置',
-    Demo: '演示',
-  },
-}
+import { LANGUAGE_OPTIONS } from '../config/appConfig.js'
+import { getUiText } from '../lib/i18n.js'
 
-export function StudioHeader({ activePanel, setActivePanel, demoMode, language = 'en', onToggleDemoMode, onNotify }) {
-  const text = HEADER_TEXT[language] || HEADER_TEXT.en
+export function StudioHeader({ activePanel, setActivePanel, demoMode, language = 'en', onLanguageChange, onToggleDemoMode, onNotify }) {
+  const text = getUiText(language)
+  const headerText = text.header
 
   function openPanel(panel) {
     const next = activePanel === panel ? null : panel
     setActivePanel(next)
-    onNotify(next ? `${panel} opened` : `${panel} closed`)
+    const label = headerText[panel] || panel
+    onNotify?.(language === 'ja' ? `${label}${next ? text.opened : text.closed}` : `${label} ${next ? text.opened : text.closed}`)
   }
 
   return (
@@ -39,37 +21,45 @@ export function StudioHeader({ activePanel, setActivePanel, demoMode, language =
           <Box size={30} />
         </div>
         <div>
-          <strong>{text.title}</strong>
-          <span>{text.subtitle}</span>
+          <strong>{headerText.title}</strong>
+          <span>{headerText.subtitle}</span>
         </div>
       </div>
       <nav className="studio-nav">
         <button type="button" className={activePanel === 'Gallery' ? 'active' : ''} onClick={() => openPanel('Gallery')}>
           <Grid3X3 size={15} />
-          {text.Gallery}
+          {headerText.Gallery}
         </button>
         <button type="button" className={activePanel === 'Library' ? 'active' : ''} onClick={() => openPanel('Library')}>
           <Library size={15} />
-          {text.Library}
+          {headerText.Library}
         </button>
         <button type="button" className={activePanel === 'Notebooks' ? 'active' : ''} onClick={() => openPanel('Notebooks')}>
           <BookOpen size={15} />
-          {text.Notebooks}
+          {headerText.Notebooks}
         </button>
         <button type="button" className={activePanel === 'Logs' ? 'active' : ''} onClick={() => openPanel('Logs')}>
           <ScrollText size={15} />
-          {text.Logs}
+          {headerText.Logs}
         </button>
         <button type="button" className={activePanel === 'Settings' ? 'active' : ''} onClick={() => openPanel('Settings')}>
           <Settings size={15} />
-          {text.Settings}
+          {headerText.Settings}
         </button>
         <button type="button" className={demoMode ? 'active' : ''} onClick={onToggleDemoMode}>
           <MonitorPlay size={15} />
-          {text.Demo}
+          {headerText.Demo}
         </button>
       </nav>
-      <button type="button" className={activePanel === 'Profile' ? 'profile-button active' : 'profile-button'} onClick={() => openPanel('Profile')}>
+      <label className="language-switcher">
+        <Globe2 size={14} />
+        <select aria-label={text.language} value={language} onChange={(event) => onLanguageChange?.(event.target.value)}>
+          {LANGUAGE_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>{option.shortLabel || option.label}</option>
+          ))}
+        </select>
+      </label>
+      <button type="button" className={activePanel === 'Profile' ? 'profile-button active' : 'profile-button'} onClick={() => openPanel('Profile')} aria-label={headerText.Profile}>
         <Box size={18} />
         <ChevronDown size={13} />
       </button>

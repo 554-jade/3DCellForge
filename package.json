@@ -4,14 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 127.0.0.1 --port 5175 --strictPort",
     "dev:api": "node server.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --test test/*.test.mjs",
     "test:visual": "NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 playwright test",
     "test:visual:update": "NO_PROXY=localhost,127.0.0.1,::1 no_proxy=localhost,127.0.0.1,::1 playwright test --update-snapshots",
-    "preview": "vite preview"
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort"
   },
   "dependencies": {
     "@fal-ai/client": "^1.10.1",

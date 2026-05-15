@@ -34,8 +34,10 @@ export const SCREENSHOT_SCALE_OPTIONS = [
 ]
 
 export const LANGUAGE_OPTIONS = [
-  { id: 'en', label: 'English' },
-  { id: 'zh', label: '中文' },
+  { id: 'en', label: 'English', shortLabel: 'EN' },
+  { id: 'zh', label: '中文', shortLabel: '中' },
+  { id: 'ja', label: '日本語', shortLabel: '日' },
+  { id: 'es', label: 'Español', shortLabel: 'ES' },
 ]
 export const LANGUAGE_IDS = new Set(LANGUAGE_OPTIONS.map((option) => option.id))
 

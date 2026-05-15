@@ -12,6 +12,34 @@ export const CELL_TYPES = [
 
 export const SEEDED_GENERATED_CELLS = [
   {
+    id: 'tripo-aviation-fighter-test',
+    name: 'Aviation Fighter Test',
+    type: 'Cached AI Aircraft',
+    accent: '#64c7ff',
+    custom: true,
+    template: 'animal',
+    imageUrl: '/aviation-fighter-tripo-input.png',
+    intelligence: {
+      configured: true,
+      categoryId: 'aircraft',
+      categoryLabel: 'Aircraft',
+      description: 'A modern fighter aircraft generated from a reference image for the Aviation Atlas showcase.',
+      material: 'Painted fuselage, canopy glass, wing edges, air intakes, and exhaust geometry.',
+      inspectionFocus: 'fuselage centerline, wings, tail fins, cockpit canopy, and engine areas',
+      presentation: 'Use a dark hangar stage with telemetry, banked camera movement, and a guided flight briefing.',
+      tags: ['fighter jet', 'aviation', 'hangar', 'flight pass'],
+    },
+    generation: {
+      provider: 'tripo',
+      requestedProvider: 'tripo',
+      status: 'success',
+      taskId: 'ffff2ab5-5ce2-4afe-90e0-0ac81edee55a',
+      modelUrl: '/generated-models/tripo-aviation-fighter-test.glb',
+      rawModelUrl: '',
+      message: 'Cached GLB from the verified Tripo aviation fighter test run.',
+    },
+  },
+  {
     id: 'tripo-epithelial-test',
     name: 'Tripo Tissue Test',
     type: 'Cached AI Asset',

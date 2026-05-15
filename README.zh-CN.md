@@ -91,10 +91,22 @@ TRIPO_API_KEY=your_tripo_key
 FAL_API_KEY=your_fal_key
 RODIN_API_KEY=your_rodin_api_key
 OPENAI_API_KEY=your_openai_key
+TTS_PROVIDER=auto
+OPENAI_TTS_API_KEY=your_openai_key
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=marin
+EDGE_TTS_COMMAND=edge-tts
 API_HOST=127.0.0.1
 ```
 
-`OPENAI_API_KEY` 会启用可选的图片理解接口 `/api/3d/analyze`。配置后，上传图片会先被视觉模型识别为资产类型、材质重点、检查重点、展示场景、标签，并生成更适合 image-to-3D 的提示词。没配置时，应用继续使用本地文件名和元数据规则，不会影响基础上传和生成。
+`OPENAI_API_KEY` 会启用可选的图片理解接口 `/api/3d/analyze`。Showcase 讲解由 `/api/tts/showcase` 处理，`TTS_PROVIDER=auto` 时：如果有 `OPENAI_TTS_API_KEY`、`VOICE_TOOLS_OPENAI_KEY` 或 `OPENAI_API_KEY`，优先走 OpenAI TTS；否则调用本机外部安装的 Edge TTS 命令。两条后端 TTS 都失败时，前端仍会退回浏览器朗读。
+
+Edge TTS **不会作为项目依赖内置**。如果要使用免费 Edge 路径，在自己的环境里安装 CLI：
+
+```bash
+pipx install edge-tts
+# 或：pip install edge-tts
+```
 
 如需启用 Hunyuan3D 本地备用模式，先启动你的 Hunyuan3D API 服务，再设置：
 

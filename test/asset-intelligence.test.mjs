@@ -25,6 +25,27 @@ describe('asset intelligence', () => {
     assert.equal(getSceneProfile(category.sceneProfile).id, 'vessel')
   })
 
+  it('routes fighter aircraft to the aviation showcase', () => {
+    const intelligence = getAssetIntelligence({
+      name: 'Aviation Fighter Test',
+      sourceFileName: 'us-advanced-fighter-01.png',
+      intelligence: {
+        configured: true,
+        categoryId: 'aircraft',
+        categoryLabel: 'Aircraft',
+        description: 'Modern fighter aircraft.',
+        material: 'Painted fuselage and canopy glass.',
+        inspectionFocus: 'fuselage, wings, tail, canopy, and engine areas',
+        presentation: 'Use an aviation flight pass.',
+        tags: ['fighter jet', 'aviation'],
+      },
+    })
+
+    assert.equal(intelligence.category.id, 'aircraft')
+    assert.equal(intelligence.scene.id, 'aircraft')
+    assert.match(intelligence.scene.summary, /fly-by|banked/i)
+  })
+
   it('maps bronze mask artifacts to museum presentation', () => {
     const intelligence = getAssetIntelligence({
       name: '戴金面罩青铜人头像',
@@ -33,6 +54,17 @@ describe('asset intelligence', () => {
 
     assert.equal(intelligence.category.id, 'artifact')
     assert.equal(intelligence.scene.label, 'Museum Turntable')
+  })
+
+  it('routes dinosaur atlas subjects to the guided fossil showcase', () => {
+    const intelligence = getAssetIntelligence({
+      name: 'Tyrannosaurus rex fossil skeleton',
+      sourceFileName: 't-rex-bone-exhibit.png',
+    })
+
+    assert.equal(intelligence.category.id, 'dinosaur')
+    assert.equal(intelligence.scene.id, 'dinosaur')
+    assert.match(intelligence.category.description, /digital atlas/i)
   })
 
   it('trusts configured vision analysis over ambiguous filenames', () => {

@@ -14,6 +14,8 @@ const SENSITIVE_KEYS = new Set([
   'RODIN_API_KEY',
   'FAL_API_KEY',
   'OPENAI_API_KEY',
+  'OPENAI_TTS_API_KEY',
+  'VOICE_TOOLS_OPENAI_KEY',
 ])
 
 export function createRequestId() {

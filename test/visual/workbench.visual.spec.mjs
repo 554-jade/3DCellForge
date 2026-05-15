@@ -80,16 +80,104 @@ test('demo mode uses a clean presentation surface', async ({ page }) => {
   await page.goto('/')
   await prepareWorkbench(page)
 
-  await page.getByRole('button', { name: 'Demo' }).click()
+  await page.getByRole('button', { name: 'Showcase' }).click()
   await expect(page.locator('.workbench-v2.demo-mode')).toBeVisible()
-  await expect(page.locator('.demo-exit-button')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Pause Tour' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Narrate/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Next Model' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Exit Showcase' })).toBeVisible()
+  await expect(page.locator('.showcase-viewer .cell-fallback')).toHaveCount(0)
   await expect(page.locator('.selection-shelf')).toBeHidden()
   await expect(page.locator('.command-zone')).toBeHidden()
   await page.addStyleTag({
-    content: '.workbench-v2.demo-mode .cell-viewer canvas { opacity: 0 !important; }',
+    content: '.workbench-v2.demo-mode canvas { opacity: 0 !important; }',
   })
 
   await expectClippedScreenshot(page, '.studio-window', 'demo-mode.png')
+})
+
+test('showcase tour controls stay visible and pause without navigation', async ({ page }) => {
+  await page.goto('/')
+  await prepareWorkbench(page)
+
+  await page.getByRole('button', { name: 'Showcase' }).click()
+  await expect(page.locator('.showcase-stage')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Pause Tour' })).toBeInViewport()
+  await expect(page.getByRole('button', { name: /Narrate/ })).toBeInViewport()
+
+  await page.getByRole('button', { name: 'Pause Tour' }).click()
+  await expect(page.locator('.showcase-stage.tour-paused')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Play Tour' })).toBeVisible()
+  await expect(page.locator('.showcase-viewer')).toBeVisible()
+  await expect(page).toHaveURL('http://127.0.0.1:4173/')
+})
+
+test('showcase does not auto-advance models during a tour', async ({ page }) => {
+  await page.goto('/')
+  await prepareWorkbench(page)
+
+  await page.getByRole('button', { name: 'Showcase' }).click()
+  await expect(page.locator('.showcase-stage')).toBeVisible()
+  const currentModel = page.locator('.showcase-current strong')
+  const initialModel = await currentModel.innerText()
+
+  await page.waitForTimeout(9800)
+  await expect(currentModel).toHaveText(initialModel)
+
+  await page.getByRole('button', { name: 'Next Model' }).click()
+  await expect(currentModel).not.toHaveText(initialModel)
+})
+
+test('showcase tabs and rail controls are interactive', async ({ page }) => {
+  await page.goto('/')
+  await prepareWorkbench(page)
+
+  await page.getByRole('button', { name: 'Showcase' }).click()
+  const stage = page.locator('.showcase-stage')
+  const modeTabs = page.locator('.showcase-mode-tabs')
+  const layerTabs = page.locator('.showcase-layer-tabs')
+  const toolRail = page.locator('.showcase-tool-rail')
+  await expect(stage).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Specimen Orbit' })).toHaveCount(0)
+  await expect(modeTabs.getByRole('button', { name: 'Story Camera' })).toHaveClass(/active/)
+
+  await modeTabs.getByRole('button', { name: 'WebGL 3D' }).click()
+  await expect(stage).toHaveClass(/mode-webgl/)
+  await expect(modeTabs.getByRole('button', { name: 'WebGL 3D' })).toHaveClass(/active/)
+
+  await modeTabs.getByRole('button', { name: 'WebGL 3D' }).click()
+  await expect(stage).toHaveClass(/mode-story/)
+  await expect(modeTabs.getByRole('button', { name: 'Story Camera' })).toHaveClass(/active/)
+
+  await modeTabs.getByRole('button', { name: 'WebGL 3D' }).click()
+  await expect(stage).toHaveClass(/mode-webgl/)
+
+  await layerTabs.getByRole('button', { name: 'Material' }).click()
+  await expect(stage).toHaveClass(/layer-1/)
+  await expect(layerTabs.getByRole('button', { name: 'Material' })).toHaveClass(/active/)
+
+  await toolRail.getByRole('button', { name: 'Reset' }).click()
+  await expect(stage).toHaveClass(/mode-story/)
+  await expect(stage).toHaveClass(/layer-0/)
+  await expect(layerTabs.getByRole('button', { name: 'Model' })).toHaveClass(/active/)
+})
+
+test('language switch updates workbench and showcase labels', async ({ page }) => {
+  await page.goto('/')
+  await prepareWorkbench(page)
+
+  await page.locator('.language-switcher select').selectOption('zh')
+  await expect(page.locator('.studio-brand')).toContainText('3D模型工作室')
+  await expect(page.getByRole('button', { name: '模型库' })).toBeVisible()
+
+  await page.getByRole('button', { name: '展示' }).click()
+  await expect(page.locator('.showcase-stage')).toBeVisible()
+  await expect(page.getByRole('button', { name: '故事镜头' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '退出展示' })).toBeVisible()
+
+  await page.locator('.showcase-language select').selectOption('ja')
+  await expect(page.getByRole('button', { name: 'ストーリーカメラ' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '終了' })).toBeVisible()
 })
 
 test('view mode controls change the live viewer state', async ({ page }) => {

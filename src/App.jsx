@@ -39,6 +39,7 @@ import { LeftSidebar } from './components/LeftSidebar.jsx'
 import { StatusToast } from './components/StatusToast.jsx'
 import { StudioHeader } from './components/StudioHeader.jsx'
 import { WorkspaceDrawer } from './components/WorkspaceDrawer.jsx'
+import { ShowcaseStage } from './showcase/ShowcaseStage.jsx'
 import './App.css'
 
 function mergeCustomModelRecords(primary = [], secondary = []) {
@@ -240,25 +241,6 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!demoMode) return undefined
-
-    const presentationCells = allCells.filter((cell) => !cell.reference).slice(0, 7)
-    if (presentationCells.length === 0) return undefined
-    let index = Math.max(0, presentationCells.findIndex((cell) => cell.id === selectedCell))
-
-    const timer = window.setInterval(() => {
-      index = (index + 1) % presentationCells.length
-      const nextCell = presentationCells[index]
-      setSelectedCell(nextCell.id)
-      setSelectedOrganelle(getDefaultOrganelle(nextCell.id, customCells))
-      setCompareCell(getCellProfile(nextCell.id, customCells).compareTarget)
-      setToast(`Presentation: ${nextCell.name}`)
-    }, 9200)
-
-    return () => window.clearInterval(timer)
-  }, [allCells, customCells, demoMode, selectedCell])
-
-  useEffect(() => {
     if (allCells.some((cell) => cell.id === selectedCell)) return
     setSelectedCell('plant')
     setSelectedOrganelle(getDefaultOrganelle('plant', customCells))
@@ -300,7 +282,7 @@ function App() {
         setActivePanel(null)
         setInspectorOpen(false)
       }
-      setToast(next ? 'Demo mode enabled' : 'Workbench mode restored')
+      setToast(next ? 'Showcase mode enabled' : 'Workbench mode restored')
       return next
     })
   }
@@ -1077,7 +1059,15 @@ function App() {
   return (
     <main className={settings.compactUi ? 'studio-shell compact-ui' : 'studio-shell'}>
       <motion.div className={demoMode ? 'studio-window workbench-v2 demo-mode' : 'studio-window workbench-v2'} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.38 }}>
-        <StudioHeader activePanel={activePanel} setActivePanel={setActivePanel} demoMode={demoMode} language={settings.language} onToggleDemoMode={toggleDemoMode} onNotify={setToast} />
+        <StudioHeader
+          activePanel={activePanel}
+          setActivePanel={setActivePanel}
+          demoMode={demoMode}
+          language={settings.language}
+          onLanguageChange={(language) => setSettings((current) => ({ ...current, language }))}
+          onToggleDemoMode={toggleDemoMode}
+          onNotify={setToast}
+        />
         <WorkspaceDrawer
           activePanel={activePanel}
           selectedCell={selectedCell}
@@ -1135,11 +1125,21 @@ function App() {
           onNotify={setToast}
         />
         <StatusToast message={toast} />
-        {demoMode && (
-          <button type="button" className="demo-exit-button" onClick={toggleDemoMode}>
-            Exit Demo
-          </button>
-        )}
+        {demoMode ? (
+          <ShowcaseStage
+            selectedCell={selectedCell}
+            selectedOrganelle={selectedOrganelle}
+            setSelectedOrganelle={setSelectedOrganelle}
+            customCells={customCells}
+            allCells={allCells}
+            renderQuality={settings.quality}
+            language={settings.language}
+            onLanguageChange={(language) => setSettings((current) => ({ ...current, language }))}
+            onSelectCell={handleSelectCell}
+            onExit={toggleDemoMode}
+            onNotify={setToast}
+          />
+        ) : (
         <div className="studio-workbench-v2">
           <div className="stage-zone">
             <CenterStage
@@ -1221,6 +1221,7 @@ function App() {
             />
           </div>
         </div>
+        )}
       </motion.div>
     </main>
   )

@@ -122,7 +122,7 @@ describe('server utility functions', () => {
 
     assert.deepEqual(decodeFalTaskId(encoded), task)
     assert.equal(normalizeFalModelId('tripo3d/tripo/v2.5/image-to-3d'), 'tripo3d/tripo/v2.5/image-to-3d')
-    assert.equal(normalizeFalModelId('fal-ai/tripo3d/v2.5/image-to-3d'), 'fal-ai/hunyuan3d/v2')
+    assert.equal(normalizeFalModelId('fal-ai/tripo3d/v2.5/image-to-3d'), 'tripo3d/tripo/v2.5/image-to-3d')
     assert.equal(normalizeFalStatus('IN_QUEUE'), 'queued')
     assert.equal(normalizeFalStatus('IN_PROGRESS'), 'running')
     assert.equal(normalizeFalStatus('COMPLETED'), 'success')
@@ -130,7 +130,18 @@ describe('server utility functions', () => {
 
     assert.deepEqual(
       buildFalInput('fal-ai/hunyuan3d/v2', 'https://cdn.example.com/input.png', { seed: 12 }),
-      { input_image_url: 'https://cdn.example.com/input.png', seed: 12 },
+      { input_image_url: 'https://cdn.example.com/input.png', seed: 12, textured_mesh: true },
+    )
+    assert.deepEqual(
+      buildFalInput('tripo3d/tripo/v2.5/image-to-3d', 'https://cdn.example.com/input.png', { seed: 9 }),
+      {
+        image_url: 'https://cdn.example.com/input.png',
+        orientation: 'align_image',
+        pbr: true,
+        seed: 9,
+        texture: 'HD',
+        texture_alignment: 'original_image',
+      },
     )
     assert.deepEqual(
       buildFalInput('fal-ai/hyper3d/rodin', 'https://cdn.example.com/input.png', { prompt: 'a detailed cell', seed: 7 }),
@@ -151,6 +162,13 @@ describe('server utility functions', () => {
         pbr_model: { url: 'https://cdn.example.com/file', content_type: 'model/gltf-binary' },
       }),
       { url: 'https://cdn.example.com/file', ext: 'glb' },
+    )
+    assert.deepEqual(
+      findFalModelFile({
+        model_mesh: { url: 'https://cdn.example.com/white-mesh.glb' },
+        textured_mesh: { url: 'https://cdn.example.com/textured-mesh.glb' },
+      }),
+      { url: 'https://cdn.example.com/textured-mesh.glb', ext: 'glb' },
     )
   })
 

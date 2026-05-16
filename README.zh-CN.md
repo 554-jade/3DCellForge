@@ -4,7 +4,7 @@
 
 AI 驱动的交互式 3D 模型生成、检查和演示工作台。
 
-3D Model Studio 是一个 React + Three.js 原型，用于把上传图片或 GLB 文件变成可交互的 3D 模型工作区。它支持 WebGL 拖拽旋转、滚轮缩放、左侧模型库 / 中央 3D 舞台 / 右侧工具区、截图、GLB 导出、历史上传默认收起、Demo 演示模式、生成队列，以及通过 Hyper3D / Tripo / Fal.ai / Hunyuan3D / JS Depth / 本地模型导入生成或加载 3D 模型。
+3D Model Studio 是一个 React + Three.js 原型，用于把上传图片或 GLB 文件变成可交互的 3D 模型工作区。它有两个刻意区分的界面：Workbench 用于生成、管理、检查和导出资产；Showcase 用于把完成后的模型包装成更产品化的演示页，带电影化镜头、语音讲解和右侧简报面板。
 
 ## 演示视频
 
@@ -19,13 +19,14 @@ AI 驱动的交互式 3D 模型生成、检查和演示工作台。
 - 支持拖拽旋转、滚轮缩放、结构隔离、部件 Inspect 和场景导出。
 - 对象级说明面板会根据资产名称和生成元数据推断类别、来源、Provider 状态、材质重点、演示价值和标签，覆盖车辆、飞机、船舰、产品、文物和有机标本。
 - 模型质量评分会展示 GLB 文件大小、三角面数、贴图数量和演示可用性。
-- Demo Mode 会隐藏左右工具区、根据物体类型使用不同运镜，并显示干净的演示信息层，适合截图和录屏。
+- Showcase Mode 会替换工作台界面，进入产品化展示页：大舞台、对象级电影运镜、语音讲解、右侧简报面板和底部模型播放列表，适合截图和录屏。
+- Showcase 控制支持 Story Camera、WebGL 3D、展示图层、手动缩放、暂停 / 继续导览、多语言讲解和手动切换模型。
 - Model Library 抽屉升级为资产库视图，包含源图预览、Provider / 状态、任务 ID、GLB URL 操作、Provider 对比和删除入口。
 - Saved Assets 默认收起，当前激活的生成 / 导入资产会固定显示并可直接点击打开。
 - 生成 / 导入成功的模型会写入 IndexedDB，刷新页面后会自动恢复；localStorage 只做轻量兜底。
 - 自定义上传记录支持删除，并同步清理相关本地数据。
 - 通用部件详情抽屉、素材参考、对比面板、模型笔记、图库操作、日志、项目保存和生成队列。
-- 支持 Hyper3D、Tripo、Fal.ai、Hunyuan3D、JS Depth 和 Local GLB 多种模式。
+- 支持 Hyper3D、Tripo、Fal.ai、Hunyuan3D、JS Depth 和 Local GLB 多种模式。Fal 默认使用 Tripo3D v2.5 HD，Hunyuan3D v2 作为带贴图备份模型。
 - 生成后的 GLB 会缓存到本地，方便后续演示和截图。
 - 内置 Khronos glTF 辅助参考模型，用于检查 GLB 加载和 PBR 材质表现。
 - API Key 只放在服务端 `.env.local`，不会暴露到前端包里。
@@ -61,9 +62,20 @@ npm run dev
 - 左侧 `Generation Queue` 可以查看上传、生成、导入状态，并对失败任务重试。
 - 需要部件说明时，再点击 `Info` 或 `Inspect` 打开详情抽屉。
 - 顶部打开 `Library` 可以查看完整资产库：预览、Provider 状态、任务 ID、GLB URL 复制、Provider 对比和删除。
-- 顶部点击 `Demo` 进入纯展示模式，适合截图、录屏、演示。
+- 顶部点击 `Showcase` 进入纯展示模式，适合截图、录屏、演示。
 - 录屏前先看主舞台的质量评分；分数低通常说明源图或生成结果还不适合演示。
-- Demo 动画会根据模型名称和元数据切换：汽车走低机位推进，飞机走飞行掠过，航母 / 船走侧向巡航，有机 / 标本类资产走工作室环绕。
+- Showcase 动画会根据模型名称和元数据切换：汽车走低机位推进，飞机走飞行掠过，航母 / 船走侧向巡航，有机 / 标本类资产走工作室环绕。
+
+## Showcase 流程
+
+Showcase 不是第二个编辑器，而是完成资产后的展示层：
+
+- 主区域变成全屏感的电影化模型舞台，而不是工作台画布。
+- 右侧变成简报面板，展示对象身份、标签、统计、导览笔记和当前观察重点。
+- 底部播放列表用于切换已保存 / 已生成模型，不再暴露生成调试控件。
+- `Story Camera` 走对象级运镜；`WebGL 3D` 开启手动 orbit 控制。
+- `Zoom` 会在 100%、124%、152%、82% 之间循环缩放模型；`Reset` 会恢复默认故事镜头和模型大小。
+- 语音讲解使用当前语言，并且播放时不会自动跳到下一个模型。
 
 常用验证命令：
 
@@ -74,7 +86,7 @@ npm run test
 npm run test:visual
 ```
 
-`npm run test:visual` 会运行 Playwright 布局和截图回归，覆盖工作台、Model Library 抽屉和 Demo Mode。只有确认 UI 改动是预期变化时，才运行 `npm run test:visual:update` 更新截图基线。
+`npm run test:visual` 会运行 Playwright 布局和截图回归，覆盖工作台、Model Library 抽屉和 Showcase Mode。只有确认 UI 改动是预期变化时，才运行 `npm run test:visual:update` 更新截图基线。
 
 ## 可选 Image-to-3D 后端
 
@@ -139,7 +151,7 @@ Local GLB   导入已有 .glb 或自包含 .gltf
 ```
 
 Tripo 上传使用当前 STS 对象存储流程，然后创建 `image_to_model` 任务。生成后的 GLB 会被 Node 后端缓存到 `.generated-models/`，后续展示优先使用本地副本。
-Fal 上传使用官方 `@fal-ai/client` 的 storage 和 queue API。当前支持 Hunyuan3D v2、TRELLIS、TripoSR、Tripo3D v2.5 和 Hyper3D Rodin，具体 Fal 模型在 `Settings` 里选择。
+Fal 上传使用官方 `@fal-ai/client` 的 storage 和 queue API。当前支持 Tripo3D v2.5 HD、Hunyuan3D v2 Textured Backup、TRELLIS、TripoSR 和 Hyper3D Rodin，具体 Fal 模型在 `Settings` 里选择；默认是 Tripo3D v2.5 HD，因为在当前工作流里通常比 Hunyuan3D 更容易得到适合演示的带贴图模型。
 Rodin 上传使用 Hyper3D 的 multipart `/rodin` 任务接口，然后轮询 `/status` 并通过 `/download` 下载和缓存 GLB。
 前端模型库会保存到 IndexedDB，所以生成或导入成功的模型记录刷新后仍会恢复。
 

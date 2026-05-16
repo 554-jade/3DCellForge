@@ -34,7 +34,7 @@ const SHOWCASE_TEXT = {
     },
     readyDescription: (name, provider, status) => `${name} is ready as a ${provider} asset. Status: ${status}.`,
     motionDescription: (motion, focus) => `${motion}: ${focus}.`,
-    zoomHint: (label) => `${label}: scroll the model to zoom`,
+    zoomHint: (label, level) => `${label}: model scale set to ${level}`,
     cameraPass: (label) => `${label} camera pass enabled`,
     selected: (label) => `${label} selected`,
     layerSelected: (label) => `${label} layer selected`,
@@ -61,7 +61,7 @@ const SHOWCASE_TEXT = {
     },
     readyDescription: (name, provider, status) => `${name} 已作为 ${provider} 模型就绪。状态：${status}。`,
     motionDescription: (motion, focus) => `${motion}：重点观察 ${focus}。`,
-    zoomHint: (label) => `${label}：滚轮缩放模型`,
+    zoomHint: (label, level) => `${label}：模型缩放到 ${level}`,
     cameraPass: (label) => `${label}镜头已开启`,
     selected: (label) => `已选择${label}`,
     layerSelected: (label) => `已选择${label}图层`,
@@ -88,7 +88,7 @@ const SHOWCASE_TEXT = {
     },
     readyDescription: (name, provider, status) => `${name} は ${provider} アセットとして準備完了です。状態：${status}。`,
     motionDescription: (motion, focus) => `${motion}：注目点は ${focus}。`,
-    zoomHint: (label) => `${label}：スクロールでズーム`,
+    zoomHint: (label, level) => `${label}：モデル倍率 ${level}`,
     cameraPass: (label) => `${label}カメラを有効化しました`,
     selected: (label) => `${label}を選択しました`,
     layerSelected: (label) => `${label}レイヤーを選択しました`,
@@ -115,7 +115,7 @@ const SHOWCASE_TEXT = {
     },
     readyDescription: (name, provider, status) => `${name} esta listo como asset ${provider}. Estado: ${status}.`,
     motionDescription: (motion, focus) => `${motion}: foco en ${focus}.`,
-    zoomHint: (label) => `${label}: usa scroll para zoom`,
+    zoomHint: (label, level) => `${label}: escala del modelo ${level}`,
     cameraPass: (label) => `${label} activado`,
     selected: (label) => `${label} seleccionado`,
     layerSelected: (label) => `Capa ${label} seleccionada`,
@@ -172,6 +172,13 @@ const SHOWCASE_SCENE_TEXT = {
   },
 }
 
+const SHOWCASE_ZOOM_LEVELS = [
+  { id: 'fit', scale: 1 },
+  { id: 'close', scale: 1.24 },
+  { id: 'detail', scale: 1.52 },
+  { id: 'wide', scale: 0.82 },
+]
+
 function getShowcaseText(language) {
   return SHOWCASE_TEXT[language] || SHOWCASE_TEXT.en
 }
@@ -209,6 +216,7 @@ export function ShowcaseStage({
   const [activeSection, setActiveSection] = useState(1)
   const [activeMode, setActiveMode] = useState('story')
   const [activeLayer, setActiveLayer] = useState(0)
+  const [zoomIndex, setZoomIndex] = useState(0)
   const cell = getCell(selectedCell, customCells)
   const modelCellId = cell.custom ? cell.template : getModelCellId(selectedCell, customCells)
   const generatedModelUrl = getGeneratedModelUrl(cell)
@@ -239,6 +247,7 @@ export function ShowcaseStage({
   const activeViewMode = activeLayer === 2 ? 'layers' : activeLayer === 1 ? 'focus' : 'solid'
   const activeProofMode = activeLayer === 3
   const presentationMode = activeMode !== 'webgl'
+  const zoomLevel = SHOWCASE_ZOOM_LEVELS[zoomIndex] || SHOWCASE_ZOOM_LEVELS[0]
   const sectionDescriptions = useMemo(() => [
     text.readyDescription(cell.fullName || cell.name, providerLabel, status),
     theme.scene.summary,
@@ -279,6 +288,7 @@ export function ShowcaseStage({
     setSpeaking(false)
     setActiveLayer(0)
     setActiveMode('story')
+    setZoomIndex(0)
     onSelectCell(cellId)
   }
 
@@ -332,9 +342,12 @@ export function ShowcaseStage({
     }
 
     if (index === 1) {
+      const nextIndex = (zoomIndex + 1) % SHOWCASE_ZOOM_LEVELS.length
+      const nextZoom = SHOWCASE_ZOOM_LEVELS[nextIndex]
+      setZoomIndex(nextIndex)
       setActiveMode('webgl')
       setTourPlaying(false)
-      onNotify?.(text.zoomHint(label))
+      onNotify?.(text.zoomHint(label, `${Math.round(nextZoom.scale * 100)}%`))
       return
     }
 
@@ -347,6 +360,7 @@ export function ShowcaseStage({
 
     setActiveMode('story')
     setActiveLayer(0)
+    setZoomIndex(0)
     setTourPlaying(true)
     stopShowcaseSpeech()
     setSpeaking(false)
@@ -429,7 +443,7 @@ export function ShowcaseStage({
 
           <div className="showcase-tool-rail" aria-label="Showcase tools">
             {toolLabels.map((label, index) => (
-              <button key={label} type="button" onClick={() => handleToolSelect(index)}>
+              <button key={label} type="button" className={index === 1 && zoomIndex !== 0 ? 'active' : ''} onClick={() => handleToolSelect(index)}>
                 {label}
               </button>
             ))}
@@ -456,6 +470,7 @@ export function ShowcaseStage({
                     renderQuality={renderQuality}
                     presentationMode={presentationMode}
                     presentationPlaying={tourPlaying}
+                    presentationScale={zoomLevel.scale}
                     transparentBackground
                     canvasFallback={null}
                     motionProfile={theme.category.motionProfile || motionProfile.id}

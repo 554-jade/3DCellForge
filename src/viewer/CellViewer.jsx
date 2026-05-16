@@ -77,6 +77,7 @@ function PresentationMotionRig({
   targetRef,
   defaultCameraPosition = DEFAULT_CELL_CAMERA_POSITION,
   defaultTarget = DEFAULT_CAMERA_TARGET,
+  presentationScale = 1,
 }) {
   const { camera } = useThree()
 
@@ -85,6 +86,7 @@ function PresentationMotionRig({
 
     if (!enabled) {
       if (target) resetTransform(target)
+      if (target) target.scale.setScalar(presentationScale)
       camera.position.set(defaultCameraPosition[0], defaultCameraPosition[1], defaultCameraPosition[2])
       lookAt(camera, defaultTarget)
       return undefined
@@ -92,16 +94,17 @@ function PresentationMotionRig({
 
     return () => {
       if (target) resetTransform(target)
+      if (target) target.scale.setScalar(presentationScale)
       camera.position.set(defaultCameraPosition[0], defaultCameraPosition[1], defaultCameraPosition[2])
       lookAt(camera, defaultTarget)
     }
-  }, [camera, defaultCameraPosition, defaultTarget, enabled, targetRef])
+  }, [camera, defaultCameraPosition, defaultTarget, enabled, presentationScale, targetRef])
 
   useFrame(({ clock }) => {
     if (!enabled || !playing || !targetRef.current) return
 
     const { sweep, wave, lift } = smoothPingPong(clock.elapsedTime, PRESENTATION_DURATION_BY_PROFILE[motionProfile] || DEFAULT_PRESENTATION_DURATION)
-    const baseScale = PRESENTATION_SCALE_BY_PROFILE[motionProfile] || 0.74
+    const baseScale = (PRESENTATION_SCALE_BY_PROFILE[motionProfile] || 0.74) * presentationScale
     const root = targetRef.current
 
     if (motionProfile === 'artifact') {
@@ -1238,7 +1241,7 @@ function CinematicReliefSpecimen({ imageUrl, autoRotate, onSelect, viewMode = 'l
   )
 }
 
-function CinematicReliefScene({ imageUrl, autoRotate, presentationMode, motionProfile, onSelectOrganelle, viewMode }) {
+function CinematicReliefScene({ imageUrl, autoRotate, presentationMode, motionProfile, onSelectOrganelle, viewMode, presentationScale = 1 }) {
   const presentationRoot = useRef(null)
 
   return (
@@ -1265,6 +1268,7 @@ function CinematicReliefScene({ imageUrl, autoRotate, presentationMode, motionPr
         motionProfile={motionProfile}
         targetRef={presentationRoot}
         defaultCameraPosition={DEFAULT_RELIEF_CAMERA_POSITION}
+        presentationScale={presentationScale}
       />
       <Suspense fallback={null}>
         <group ref={presentationRoot}>
@@ -1276,7 +1280,7 @@ function CinematicReliefScene({ imageUrl, autoRotate, presentationMode, motionPr
   )
 }
 
-export function CinematicLayerVisual({ imageUrl, selectedOrganelle, onSelectOrganelle, autoRotate, presentationMode = false, motionProfile = 'specimen', viewMode = 'layers' }) {
+export function CinematicLayerVisual({ imageUrl, selectedOrganelle, onSelectOrganelle, autoRotate, presentationMode = false, motionProfile = 'specimen', viewMode = 'layers', presentationScale = 1 }) {
   const [pointer, setPointer] = useState({ x: 0, y: 0 })
   const [visualState, setVisualState] = useState(null)
   const visual = visualState?.imageUrl === imageUrl ? visualState.visual : null
@@ -1336,7 +1340,7 @@ export function CinematicLayerVisual({ imageUrl, selectedOrganelle, onSelectOrga
     >
       {!webglAvailable && <div className="cinematic-depth-field" />}
       {webglAvailable ? (
-        <CinematicReliefScene imageUrl={imageUrl} autoRotate={autoRotate} presentationMode={presentationMode} motionProfile={motionProfile} onSelectOrganelle={onSelectOrganelle} viewMode={viewMode} />
+        <CinematicReliefScene imageUrl={imageUrl} autoRotate={autoRotate} presentationMode={presentationMode} motionProfile={motionProfile} onSelectOrganelle={onSelectOrganelle} viewMode={viewMode} presentationScale={presentationScale} />
       ) : (
         <div
           className={`layered-png-stage motion-${motionProfile} ${autoRotate ? 'auto' : ''}`}
@@ -1378,7 +1382,7 @@ export function CinematicLayerVisual({ imageUrl, selectedOrganelle, onSelectOrga
   )
 }
 
-export function CellScene({ selectedCell, modelCellId, referenceImageUrl, generatedModelUrl, selectedOrganelle, crossSection, autoRotate, hideOthers, proofMode, viewMode = 'layers', renderQuality, presentationMode = false, presentationPlaying = true, transparentBackground = false, motionProfile = 'specimen', canvasFallback, onSelectOrganelle, onExporterReady = null }) {
+export function CellScene({ selectedCell, modelCellId, referenceImageUrl, generatedModelUrl, selectedOrganelle, crossSection, autoRotate, hideOthers, proofMode, viewMode = 'layers', renderQuality, presentationMode = false, presentationPlaying = true, presentationScale = 1, transparentBackground = false, motionProfile = 'specimen', canvasFallback, onSelectOrganelle, onExporterReady = null }) {
   const isPlant = modelCellId === 'plant'
   const presentationRoot = useRef(null)
   const exportRoot = useRef(null)
@@ -1409,7 +1413,7 @@ export function CellScene({ selectedCell, modelCellId, referenceImageUrl, genera
       <pointLight position={[-2.4, 1.2, 1.6]} intensity={0.75} color="#b8f7a6" />
       {proofMode && <ProofRig />}
       {presentationMode && <PresentationEnvironment profile={motionProfile} />}
-      <PresentationMotionRig enabled={presentationMode} playing={presentationPlaying} motionProfile={motionProfile} targetRef={presentationRoot} />
+      <PresentationMotionRig enabled={presentationMode} playing={presentationPlaying} motionProfile={motionProfile} targetRef={presentationRoot} presentationScale={presentationScale} />
       <group ref={presentationRoot}>
         <group ref={exportRoot} name={`${selectedCell}-model-export-root`}>
           {generatedModelUrl ? (

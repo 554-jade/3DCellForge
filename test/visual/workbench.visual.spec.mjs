@@ -156,9 +156,14 @@ test('showcase tabs and rail controls are interactive', async ({ page }) => {
   await expect(stage).toHaveClass(/layer-1/)
   await expect(layerTabs.getByRole('button', { name: 'Material' })).toHaveClass(/active/)
 
+  await toolRail.getByRole('button', { name: 'Zoom' }).click()
+  await expect(stage).toHaveClass(/mode-webgl/)
+  await expect(toolRail.getByRole('button', { name: 'Zoom' })).toHaveClass(/active/)
+
   await toolRail.getByRole('button', { name: 'Reset' }).click()
   await expect(stage).toHaveClass(/mode-story/)
   await expect(stage).toHaveClass(/layer-0/)
+  await expect(toolRail.getByRole('button', { name: 'Zoom' })).not.toHaveClass(/active/)
   await expect(layerTabs.getByRole('button', { name: 'Model' })).toHaveClass(/active/)
 })
 

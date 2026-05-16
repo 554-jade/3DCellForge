@@ -4,18 +4,19 @@ export const GENERATION_HISTORY_STORAGE_KEY = 'bio-demo-generation-history'
 export const NOTES_STORAGE_KEY = 'bio-demo-notes'
 export const PROJECT_FALLBACK_STORAGE_KEY = 'bio-demo-projects'
 const VITE_ENV = import.meta.env || {}
-export const SETTINGS_STORAGE_VERSION = 5
+export const SETTINGS_STORAGE_VERSION = 6
 export const UI_STATE_STORAGE_KEY = 'bio-demo-ui-state'
 export const UI_STATE_STORAGE_VERSION = 1
 export const FAL_MODEL_OPTIONS = [
-  { id: 'fal-ai/hunyuan3d/v2', label: 'Hunyuan3D v2', description: 'Tencent Hunyuan3D v2 through Fal.' },
+  { id: 'tripo3d/tripo/v2.5/image-to-3d', label: 'Tripo3D v2.5 HD', description: 'Fal-hosted Tripo3D with HD texture and PBR enabled.' },
+  { id: 'fal-ai/hunyuan3d/v2', label: 'Hunyuan3D v2 Textured Backup', description: 'Tencent Hunyuan3D v2 through Fal with textured mesh enabled.' },
   { id: 'fal-ai/trellis', label: 'TRELLIS', description: 'Image-to-3D with textured mesh output.' },
   { id: 'fal-ai/triposr', label: 'TripoSR', description: 'Fast image reconstruction through Fal.' },
-  { id: 'tripo3d/tripo/v2.5/image-to-3d', label: 'Tripo3D v2.5', description: 'Fal-hosted Tripo3D image-to-3D.' },
   { id: 'fal-ai/hyper3d/rodin', label: 'Hyper3D Rodin', description: 'Fal-hosted Rodin image-to-3D.' },
 ]
 export const FAL_MODEL_IDS = new Set(FAL_MODEL_OPTIONS.map((option) => option.id))
 export const DEFAULT_FAL_MODEL = FAL_MODEL_OPTIONS[0].id
+export const LEGACY_FAL_DEFAULT_MODEL = 'fal-ai/hunyuan3d/v2'
 export const DEFAULT_SETTINGS = {
   quality: 'balanced',
   compactUi: false,

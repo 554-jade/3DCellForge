@@ -5226,13 +5226,14 @@ input:focus-visible + i {
   inset: 16px;
   z-index: 34;
   display: grid;
-  grid-template-columns: 214px minmax(0, 1fr) 318px;
+  grid-template-columns: minmax(0, 1fr) 340px;
   grid-template-rows: minmax(0, 1fr);
-  gap: 14px;
+  gap: 16px;
   overflow: hidden;
   min-height: 0;
+  padding: 18px;
   border: 1px solid rgba(112, 188, 220, 0.32);
-  border-radius: 16px;
+  border-radius: 22px;
   color: #eaf7ff;
   background:
     radial-gradient(circle at 45% 54%, rgba(39, 205, 255, 0.22), transparent 26%),
@@ -5323,20 +5324,34 @@ input:focus-visible + i {
 }
 
 .showcase-library {
+  position: absolute;
+  left: 34px;
+  right: 400px;
+  bottom: 28px;
+  z-index: 16;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 14px;
-  padding: 16px 12px;
-  min-height: 0;
-  border-right: 1px solid rgba(122, 205, 242, 0.18);
-  background: rgba(3, 13, 36, 0.42);
-  backdrop-filter: blur(18px);
+  grid-template-columns: 178px minmax(0, 1fr);
+  grid-template-rows: 34px minmax(0, 1fr);
+  gap: 10px 12px;
+  min-height: 108px;
+  padding: 12px;
+  border: 1px solid rgba(125, 223, 255, 0.18);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(7, 20, 49, 0.82), rgba(10, 35, 75, 0.58)),
+    radial-gradient(circle at 8% 20%, rgba(112, 235, 255, 0.16), transparent 34%);
+  box-shadow:
+    0 22px 54px rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
 }
 
 .theme-product .showcase-library,
 .theme-specimen .showcase-library {
-  background: rgba(5, 22, 46, 0.62);
-  border-right-color: rgba(112, 211, 255, 0.2);
+  background:
+    linear-gradient(135deg, rgba(7, 24, 48, 0.84), rgba(8, 42, 70, 0.58)),
+    radial-gradient(circle at 8% 20%, rgba(112, 235, 255, 0.16), transparent 34%);
+  border-color: rgba(112, 211, 255, 0.2);
 }
 
 .showcase-brand {
@@ -5344,6 +5359,8 @@ input:focus-visible + i {
   grid-template-columns: 42px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
+  grid-row: 1 / 3;
+  align-self: center;
 }
 
 .showcase-brand > svg {
@@ -5378,25 +5395,32 @@ input:focus-visible + i {
 }
 
 .showcase-nav {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  gap: 7px;
+  overflow: hidden;
 }
 
 .showcase-nav button {
   appearance: none;
   display: flex;
   align-items: center;
-  min-height: 34px;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 32px;
   padding: 0 12px;
   border: 1px solid rgba(126, 213, 255, 0.18);
-  border-radius: 12px;
+  border-radius: 999px;
   color: color-mix(in srgb, currentColor, transparent 20%);
   background: rgba(255, 255, 255, 0.07);
   box-shadow: inset 0 0 18px rgba(78, 182, 255, 0.05);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 850;
-  text-align: left;
+  justify-content: center;
+  text-align: center;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .showcase-nav .active {
@@ -5410,7 +5434,7 @@ input:focus-visible + i {
 }
 
 .showcase-current {
-  display: grid;
+  display: none;
   gap: 6px;
   padding: 12px;
   border: 1px solid rgba(120, 211, 248, 0.22);
@@ -5424,10 +5448,13 @@ input:focus-visible + i {
 }
 
 .showcase-list {
-  display: grid;
-  align-content: start;
-  gap: 9px;
-  overflow: auto;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
 }
 
 .showcase-list button {
@@ -5435,7 +5462,8 @@ input:focus-visible + i {
   grid-template-columns: 38px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  min-height: 58px;
+  flex: 0 0 182px;
+  min-height: 52px;
   padding: 9px;
   border: 1px solid rgba(119, 204, 242, 0.18);
   border-radius: 12px;
@@ -5469,6 +5497,8 @@ input:focus-visible + i {
 }
 
 .showcase-main {
+  grid-column: 1;
+  grid-row: 1;
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -5478,10 +5508,10 @@ input:focus-visible + i {
 
 .showcase-stage-frame {
   position: absolute;
-  inset: 14px 0 0;
+  inset: 0;
   overflow: hidden;
   border: 1px solid rgba(98, 206, 255, 0.28);
-  border-radius: 16px;
+  border-radius: 20px;
   background:
     linear-gradient(180deg, rgba(35, 76, 139, 0.42), rgba(5, 15, 37, 0.2) 44%, rgba(4, 13, 34, 0.34)),
     radial-gradient(circle at 52% 58%, rgba(54, 207, 255, 0.18), transparent 28%);
@@ -5517,9 +5547,9 @@ input:focus-visible + i {
 .showcase-title {
   position: absolute;
   z-index: 9;
-  top: 28px;
+  top: 26px;
   left: 28px;
-  max-width: clamp(280px, calc(100% - 440px), 500px);
+  max-width: clamp(360px, calc(100% - 520px), 760px);
 }
 
 .showcase-title span,
@@ -5541,18 +5571,20 @@ input:focus-visible + i {
   max-width: 100%;
   margin: 8px 0 0;
   color: inherit;
-  font-size: clamp(30px, 2.55vw, 42px);
+  overflow: visible;
+  text-overflow: clip;
+  font-size: clamp(38px, 4.2vw, 68px);
   font-weight: 900;
   line-height: 0.96;
   letter-spacing: 0;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .showcase-title p {
   max-width: 460px;
   margin: 10px 0 0;
   color: color-mix(in srgb, currentColor, transparent 22%);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.45;
 }
@@ -5560,8 +5592,8 @@ input:focus-visible + i {
 .showcase-mode-tabs {
   position: absolute;
   z-index: 10;
-  top: 22px;
-  right: 24px;
+  top: 28px;
+  right: 28px;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -5611,8 +5643,8 @@ input:focus-visible + i {
 .showcase-layer-tabs {
   position: absolute;
   z-index: 9;
-  top: 76px;
-  right: 24px;
+  top: 92px;
+  right: 28px;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -5652,8 +5684,8 @@ input:focus-visible + i {
 .showcase-tool-rail {
   position: absolute;
   z-index: 9;
-  top: 128px;
-  left: 18px;
+  top: 188px;
+  left: 26px;
   display: grid;
   gap: 8px;
   width: 58px;
@@ -5682,13 +5714,20 @@ input:focus-visible + i {
   cursor: pointer;
 }
 
+.showcase-tool-rail button.active {
+  border-color: rgba(109, 211, 255, 0.72);
+  color: #071b2f;
+  background: linear-gradient(135deg, #9cecff, #7276ff);
+  box-shadow: 0 10px 24px rgba(59, 198, 255, 0.24);
+}
+
 .showcase-viewer-shell {
   position: absolute;
   z-index: 1;
-  top: 154px;
-  right: 12px;
-  bottom: 74px;
-  left: 12px;
+  top: 144px;
+  right: 16px;
+  bottom: 110px;
+  left: 16px;
   overflow: hidden;
 }
 
@@ -5755,15 +5794,14 @@ input:focus-visible + i {
 
 .showcase-toolbar {
   position: absolute;
-  z-index: 12;
-  left: 50%;
-  bottom: 16px;
+  z-index: 18;
+  right: 24px;
+  bottom: 154px;
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
   gap: 9px;
   max-width: calc(100% - 40px);
-  transform: translateX(-50%);
 }
 
 .showcase-toolbar button,
@@ -5791,21 +5829,31 @@ input:focus-visible + i {
 }
 
 .showcase-detail {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
   align-content: start;
   gap: 12px;
-  padding: 14px 12px;
+  padding: 16px;
   min-height: 0;
   overflow: auto;
-  border-left: 1px solid rgba(122, 205, 242, 0.18);
-  background: rgba(5, 16, 43, 0.62);
-  backdrop-filter: blur(18px);
+  border: 1px solid rgba(122, 205, 242, 0.18);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(7, 18, 43, 0.82), rgba(6, 16, 37, 0.7)),
+    radial-gradient(circle at 12% 0%, rgba(119, 229, 255, 0.12), transparent 32%);
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
 }
 
 .theme-product .showcase-detail,
 .theme-specimen .showcase-detail {
-  background: rgba(5, 22, 46, 0.64);
-  border-left-color: rgba(112, 211, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(7, 24, 48, 0.82), rgba(6, 18, 38, 0.7)),
+    radial-gradient(circle at 12% 0%, rgba(119, 229, 255, 0.12), transparent 32%);
+  border-color: rgba(112, 211, 255, 0.2);
 }
 
 .showcase-close {
@@ -5860,6 +5908,10 @@ input:focus-visible + i {
   background:
     radial-gradient(circle at 50% 34%, rgba(95, 220, 255, 0.18), transparent 36%),
     rgba(255, 255, 255, 0.08);
+}
+
+.showcase-reference:has(.showcase-reference-placeholder) {
+  display: none;
 }
 
 .showcase-reference img {
@@ -6008,24 +6060,33 @@ input:focus-visible + i {
 @media (max-height: 760px) {
   .showcase-stage {
     inset: 10px;
-    grid-template-columns: 196px minmax(0, 1fr) 288px;
+    grid-template-columns: minmax(0, 1fr) 292px;
     gap: 10px;
+    padding: 12px;
   }
 
-  .showcase-library,
   .showcase-detail {
     padding: 12px 10px;
     gap: 10px;
   }
 
+  .showcase-library {
+    left: 24px;
+    right: 344px;
+    bottom: 18px;
+    min-height: 92px;
+    grid-template-columns: 154px minmax(0, 1fr);
+    padding: 10px;
+  }
+
   .showcase-title {
     top: 20px;
     left: 22px;
-    max-width: clamp(240px, calc(100% - 390px), 440px);
+    max-width: clamp(240px, calc(100% - 410px), 460px);
   }
 
   .showcase-title h1 {
-    font-size: clamp(28px, 3.2vw, 38px);
+    font-size: clamp(34px, 4.2vw, 58px);
   }
 
   .showcase-title p {
@@ -6044,7 +6105,7 @@ input:focus-visible + i {
   }
 
   .showcase-layer-tabs {
-    top: 68px;
+    top: 64px;
     right: 18px;
   }
 
@@ -6055,12 +6116,13 @@ input:focus-visible + i {
   }
 
   .showcase-viewer-shell {
-    top: 134px;
-    bottom: 66px;
+    top: 118px;
+    bottom: 92px;
   }
 
   .showcase-toolbar {
-    bottom: 12px;
+    right: 18px;
+    bottom: 120px;
   }
 
   .showcase-toolbar button,
@@ -6077,11 +6139,16 @@ input:focus-visible + i {
 
 @media (max-width: 1260px) {
   .showcase-stage {
-    grid-template-columns: 188px minmax(0, 1fr) 292px;
+    grid-template-columns: minmax(0, 1fr) 302px;
+  }
+
+  .showcase-library {
+    right: 354px;
+    grid-template-columns: 154px minmax(0, 1fr);
   }
 
   .showcase-title {
-    max-width: clamp(220px, calc(100% - 360px), 360px);
+    max-width: clamp(220px, calc(100% - 430px), 420px);
   }
 
   .showcase-mode-tabs {

@@ -4,7 +4,7 @@
 
 AI-powered interactive 3D model generation, inspection, and presentation studio.
 
-3D Model Studio is a React + Three.js prototype for turning uploaded reference images or GLB files into a polished interactive 3D workspace. It supports live WebGL orbit controls, a left model library / center stage / right tools workbench, screenshots, GLB export, collapsed upload history, demo presentation mode, a generation queue, and optional image-to-3D providers for generating real 3D models from uploaded reference images.
+3D Model Studio is a React + Three.js prototype for turning uploaded reference images or GLB files into a polished interactive 3D workspace. It has two intentionally different surfaces: a production Workbench for generating, managing, inspecting, and exporting assets, and a productized Showcase for presenting a finished model with cinematic camera controls, narration, and a briefing panel.
 
 ## Demo
 
@@ -19,12 +19,13 @@ Open the demo video: [Demo MP4](docs/demo/3DCellForge-demo-2026-05-10.mp4)
 - Drag to rotate, scroll to zoom, isolate structure parts, inspect model details, and export the current scene.
 - Object-aware inspector with inferred category, source, provider state, material focus, demo value, and tags for vehicles, aircraft, vessels, products, artifacts, and organic specimens.
 - Model quality score for generated GLBs, including file size, triangle count, texture count, and demo readiness.
-- Demo Mode for screenshots and screen recordings: hides side panels, uses object-aware cinematic camera paths, and shows a clean presentation overlay.
+- Showcase Mode for screenshots and screen recordings: replaces the workbench with a product-style presentation surface, object-aware cinematic camera paths, voice narration, a right-side briefing panel, and a bottom model playlist.
+- Showcase controls include Story Camera, WebGL 3D, presentation layers, manual zoom levels, pause/play tour, localized narration, and manual model switching.
 - Productized Model Library drawer with source thumbnails, provider/status, task id, GLB URL actions, comparison, and delete controls.
 - Saved Assets stays collapsed by default, while the active generated/imported asset stays pinned and clickable.
 - Generated/imported models are restored after refresh through IndexedDB, with localStorage as a compact fallback.
 - Generic part detail drawer, asset references, comparison panel, notes, gallery actions, logs, saved projects, and a compact generation queue.
-- Hyper3D, Tripo, Fal.ai, Hunyuan3D, JS Depth, and Local GLB generation/import modes.
+- Hyper3D, Tripo, Fal.ai, Hunyuan3D, JS Depth, and Local GLB generation/import modes. Fal defaults to Tripo3D v2.5 HD, with Hunyuan3D v2 kept as a textured backup.
 - Cached demo GLB models for offline-friendly screenshots and demos.
 - Auxiliary Khronos glTF reference models for GLB loader and PBR material checks.
 - API key stays server-side in `.env.local`; it is never exposed to the frontend bundle.
@@ -60,9 +61,20 @@ The default screen is intentionally quiet:
 - Watch upload/generation/import state in the left `Generation Queue` panel.
 - Click `Info` or `Inspect` only when you need the part detail drawer.
 - Open top-nav `Library` for the full asset catalog with previews, provider state, task ids, GLB URL copy, provider comparison, and deletion.
-- Click `Demo` in the top navigation to enter a clean presentation mode for screenshots and recordings.
+- Click `Showcase` in the top navigation to enter a clean presentation mode for screenshots and recordings.
 - Check the quality card on the stage before recording; low scores usually mean the source image or provider result is not demo-ready.
-- Demo animation adapts to the model name and metadata: cars use a road push-in, aircraft use a flight pass, ships/carriers use a naval cruise, and organic/specimen assets use a studio orbit.
+- Showcase animation adapts to the model name and metadata: cars use a road push-in, aircraft use a flight pass, ships/carriers use a naval cruise, and organic/specimen assets use a studio orbit.
+
+## Showcase Workflow
+
+Showcase is not a second editor. It is the presentation layer for a finished asset:
+
+- The main stage becomes a full cinematic viewer instead of the workbench canvas.
+- The right rail becomes a briefing panel with object identity, tags, stats, guided notes, and the active inspection focus.
+- The bottom playlist switches between saved/generated models without exposing generation controls.
+- `Story Camera` runs the object-aware camera pass; `WebGL 3D` enables manual orbit controls.
+- `Zoom` cycles model scale through 100%, 124%, 152%, and 82%; `Reset` restores the default story camera and model scale.
+- Narration uses the selected language and never auto-advances the model during playback.
 
 Useful validation commands:
 
@@ -73,7 +85,7 @@ npm run test
 npm run test:visual
 ```
 
-`npm run test:visual` runs Playwright layout and screenshot regression checks for the workbench, the Model Library drawer, and Demo Mode. Use `npm run test:visual:update` only when an intentional UI change needs new screenshot baselines.
+`npm run test:visual` runs Playwright layout and screenshot regression checks for the workbench, the Model Library drawer, and Showcase Mode. Use `npm run test:visual:update` only when an intentional UI change needs new screenshot baselines.
 
 ## Optional Image-to-3D Backend
 
@@ -138,7 +150,7 @@ Local GLB   Import an existing .glb or self-contained .gltf
 ```
 
 Tripo uploads use the current STS object-storage flow (`/upload/sts/token`) before creating an `image_to_model` task.
-Fal uploads use the official `@fal-ai/client` storage and queue APIs. Supported Fal models are Hunyuan3D v2, TRELLIS, TripoSR, Tripo3D v2.5, and Hyper3D Rodin. Pick the active Fal model in `Settings`.
+Fal uploads use the official `@fal-ai/client` storage and queue APIs. Supported Fal models are Tripo3D v2.5 HD, Hunyuan3D v2 Textured Backup, TRELLIS, TripoSR, and Hyper3D Rodin. Pick the active Fal model in `Settings`; the default is Tripo3D v2.5 HD because it usually gives stronger textured demo assets than Hunyuan3D on this workflow.
 Rodin uploads use Hyper3D's multipart `/rodin` task API, then poll `/status` and cache the GLB returned by `/download`.
 Generated GLBs are cached by the Node backend under `.generated-models/`, so later views use the local copy instead of temporary provider URLs.
 The frontend model library is saved in IndexedDB, so successful generated/imported model records survive page refreshes.

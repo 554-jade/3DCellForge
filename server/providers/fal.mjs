@@ -8,10 +8,17 @@ import { isSuccessStatus } from '../object-utils.mjs'
 
 export const FAL_MODEL_DEFINITIONS = [
   {
+    id: 'tripo3d/tripo/v2.5/image-to-3d',
+    label: 'Tripo3D v2.5 HD',
+    imageField: 'image_url',
+    defaults: { orientation: 'align_image', pbr: true, texture: 'HD', texture_alignment: 'original_image' },
+    supportsSeed: true,
+  },
+  {
     id: 'fal-ai/hunyuan3d/v2',
-    label: 'Hunyuan3D v2',
+    label: 'Hunyuan3D v2 Textured Backup',
     imageField: 'input_image_url',
-    defaults: {},
+    defaults: { textured_mesh: true },
     supportsSeed: true,
   },
   {
@@ -27,13 +34,6 @@ export const FAL_MODEL_DEFINITIONS = [
     imageField: 'image_url',
     defaults: { do_remove_background: true, output_format: 'glb' },
     supportsSeed: false,
-  },
-  {
-    id: 'tripo3d/tripo/v2.5/image-to-3d',
-    label: 'Tripo3D v2.5',
-    imageField: 'image_url',
-    defaults: { orientation: 'align_image', pbr: true, texture: 'standard' },
-    supportsSeed: true,
   },
   {
     id: 'fal-ai/hyper3d/rodin',
@@ -287,7 +287,15 @@ function inferModelExtension({ url, fileName, contentType }) {
 
 function scoreFalModelCandidate(key, ext) {
   const name = String(key || '').toLowerCase()
-  const keyScore = name.includes('pbr') ? 0 : name.includes('glb') ? 1 : name.includes('mesh') ? 2 : name.includes('base') ? 3 : 4
+  const keyScore = name.includes('textured') || name.includes('texture') || name.includes('material') || name.includes('pbr')
+    ? 0
+    : name.includes('glb')
+      ? 1
+      : name.includes('mesh')
+        ? 2
+        : name.includes('base') || name.includes('geometry') || name.includes('raw')
+          ? 3
+          : 4
   const extScore = ext === 'glb' ? 0 : 1
   return keyScore * 10 + extScore
 }

@@ -4,9 +4,15 @@ export const GENERATION_HISTORY_STORAGE_KEY = 'bio-demo-generation-history'
 export const NOTES_STORAGE_KEY = 'bio-demo-notes'
 export const PROJECT_FALLBACK_STORAGE_KEY = 'bio-demo-projects'
 const VITE_ENV = import.meta.env || {}
-export const SETTINGS_STORAGE_VERSION = 6
+export const SETTINGS_STORAGE_VERSION = 7
 export const UI_STATE_STORAGE_KEY = 'bio-demo-ui-state'
 export const UI_STATE_STORAGE_VERSION = 1
+export const RODIN_MODEL_OPTIONS = [
+  { id: 'gen2-hq', label: 'Rodin Gen-2 HQ', description: 'Official Hyper3D Rodin Gen-2 with HighPack, HD texture, and PBR output.' },
+  { id: 'gen25-hq', label: 'Rodin Gen-2.5 HQ', description: 'Official Hyper3D Rodin Gen-2.5 tier through the direct Rodin API. Requires API access that accepts Gen-2.5.' },
+]
+export const RODIN_MODEL_IDS = new Set(RODIN_MODEL_OPTIONS.map((option) => option.id))
+export const DEFAULT_RODIN_MODEL = RODIN_MODEL_OPTIONS[0].id
 export const FAL_MODEL_OPTIONS = [
   { id: 'tripo3d/tripo/v2.5/image-to-3d', label: 'Tripo3D v2.5 HD', description: 'Fal-hosted Tripo3D with HD texture and PBR enabled.' },
   { id: 'fal-ai/hunyuan3d/v2', label: 'Hunyuan3D v2 Textured Backup', description: 'Tencent Hunyuan3D v2 through Fal with textured mesh enabled.' },
@@ -22,6 +28,7 @@ export const DEFAULT_SETTINGS = {
   compactUi: false,
   generationProvider: 'rodin',
   generationMode: 'rodin',
+  rodinModelId: DEFAULT_RODIN_MODEL,
   falModelId: DEFAULT_FAL_MODEL,
   screenshotScale: 2,
   language: 'en',

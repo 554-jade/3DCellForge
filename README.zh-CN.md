@@ -102,6 +102,9 @@ cp .env.example .env.local
 TRIPO_API_KEY=your_tripo_key
 FAL_API_KEY=your_fal_key
 RODIN_API_KEY=your_rodin_api_key
+RODIN_DEFAULT_MODEL=gen2-hq
+# 可选：只有你的 Hyper3D 账号 / API 权限接受时再打开
+# RODIN_DEFAULT_MODEL=gen25-hq
 OPENAI_API_KEY=your_openai_key
 TTS_PROVIDER=auto
 OPENAI_TTS_API_KEY=your_openai_key
@@ -152,7 +155,14 @@ Local GLB   导入已有 .glb 或自包含 .gltf
 
 Tripo 上传使用当前 STS 对象存储流程，然后创建 `image_to_model` 任务。生成后的 GLB 会被 Node 后端缓存到 `.generated-models/`，后续展示优先使用本地副本。
 Fal 上传使用官方 `@fal-ai/client` 的 storage 和 queue API。当前支持 Tripo3D v2.5 HD、Hunyuan3D v2 Textured Backup、TRELLIS、TripoSR 和 Hyper3D Rodin，具体 Fal 模型在 `Settings` 里选择；默认是 Tripo3D v2.5 HD，因为在当前工作流里通常比 Hunyuan3D 更容易得到适合演示的带贴图模型。
-Rodin 上传使用 Hyper3D 的 multipart `/rodin` 任务接口，然后轮询 `/status` 并通过 `/download` 下载和缓存 GLB。
+Rodin 上传使用 Hyper3D 官方 multipart `/api/v2/rodin` 任务接口，然后轮询 `/status` 并通过 `/download` 下载和缓存 GLB。`Settings` 抽屉里现在有官方 Rodin 预设：
+
+```text
+Rodin Gen-2 HQ    官方公开 Gen-2 路径，开启 PBR、HD texture、HighPack 和 quality_override。
+Rodin Gen-2.5 HQ  直连官方 Rodin 的 tier=Gen-2.5 路径，需要你的 Hyper3D API 权限接受 Gen-2.5。
+```
+
+Hyper3D 公开 API 文档目前明确写的是 Gen-2 及其高质量参数（`hd_texture`、`addons=HighPack`、`quality_override`）。Gen-2.5 这里是直连官方 Rodin tier，不走 Fal；如果账号或接口暂时不支持，后端会返回官方 Rodin 错误，不会假装成功或静默降级。
 前端模型库会保存到 IndexedDB，所以生成或导入成功的模型记录刷新后仍会恢复。
 
 也可以从 `New Upload` 入口导入本地 `.glb` 或自包含 `.gltf`，导入后会成为自定义工作区模型。

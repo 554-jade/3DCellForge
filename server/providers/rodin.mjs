@@ -3,11 +3,16 @@ import { fetch as undiciFetch, FormData } from 'undici'
 
 import {
   OUTBOUND_PROXY_AGENT,
+  RODIN_ADDONS,
   RODIN_API_BASE,
   RODIN_API_KEY,
+  RODIN_DEFAULT_MODEL,
+  RODIN_HD_TEXTURE,
   RODIN_MATERIAL,
   RODIN_MESH_MODE,
+  RODIN_PREVIEW_RENDER,
   RODIN_QUALITY,
+  RODIN_QUALITY_OVERRIDE,
   RODIN_TIER,
   hasOutboundProxy,
 } from '../config.mjs'
@@ -15,14 +20,52 @@ import { parseDataUrl, sanitizeFileName } from '../http-utils.mjs'
 import { cacheRemoteModelAs, hasLocalModel, localModelUrl } from '../model-store.mjs'
 import { findFirstValue } from '../object-utils.mjs'
 
+export const RODIN_MODEL_DEFINITIONS = [
+  {
+    id: 'gen2-hq',
+    label: 'Rodin Gen-2 HQ',
+    tier: 'Gen-2',
+    quality: 'high',
+    qualityOverride: 150000,
+    meshMode: 'Quad',
+    material: 'PBR',
+    addons: ['HighPack'],
+    hdTexture: true,
+    previewRender: true,
+  },
+  {
+    id: 'gen25-hq',
+    label: 'Rodin Gen-2.5 HQ',
+    tier: 'Gen-2.5',
+    quality: 'high',
+    qualityOverride: 200000,
+    meshMode: 'Quad',
+    material: 'PBR',
+    addons: ['HighPack'],
+    hdTexture: true,
+    previewRender: true,
+  },
+]
+
+const RODIN_MODEL_IDS = new Set(RODIN_MODEL_DEFINITIONS.map((model) => model.id))
+const FALLBACK_RODIN_MODEL = RODIN_MODEL_DEFINITIONS[0].id
+
 export function getRodinHealth() {
+  const defaults = buildRodinOptions({})
+
   return {
     configured: Boolean(RODIN_API_KEY),
     baseUrl: RODIN_API_BASE,
-    tier: RODIN_TIER,
-    quality: RODIN_QUALITY,
-    meshMode: RODIN_MESH_MODE,
-    material: RODIN_MATERIAL,
+    defaultModel: defaults.modelId,
+    models: RODIN_MODEL_DEFINITIONS.map(({ id, label, tier }) => ({ id, label, tier })),
+    tier: defaults.tier,
+    quality: defaults.quality,
+    qualityOverride: defaults.qualityOverride,
+    meshMode: defaults.meshMode,
+    material: defaults.material,
+    addons: defaults.addons,
+    hdTexture: defaults.hdTexture,
+    previewRender: defaults.previewRender,
   }
 }
 
@@ -31,13 +74,11 @@ export async function createRodinTask(payload) {
 
   const image = parseDataUrl(payload.imageDataUrl)
   const fileName = sanitizeFileName(payload.fileName || `cell-reference.${image.ext}`)
+  const rodinOptions = buildRodinOptions(payload)
   const form = new FormData()
   form.append('images', new Blob([image.buffer], { type: image.mime }), fileName)
   form.append('geometry_file_format', 'glb')
-  form.append('material', payload.material || RODIN_MATERIAL)
-  form.append('quality', payload.quality || RODIN_QUALITY)
-  form.append('tier', payload.tier || RODIN_TIER)
-  form.append('mesh_mode', payload.meshMode || RODIN_MESH_MODE)
+  appendRodinOptions(form, rodinOptions)
 
   if (payload.prompt) form.append('prompt', payload.prompt)
   if (payload.seed !== undefined) form.append('seed', String(payload.seed))
@@ -63,6 +104,9 @@ export async function createRodinTask(payload) {
 
   return {
     provider: 'rodin',
+    modelId: rodinOptions.modelId,
+    modelLabel: rodinOptions.modelLabel,
+    tier: rodinOptions.tier,
     taskId: encodeRodinTaskId({ taskUuid, subscriptionKey }),
     status: 'queued',
     raw: sanitizeRodinRaw(raw),
@@ -153,6 +197,34 @@ export function normalizeRodinStatus(statuses) {
   return 'running'
 }
 
+export function normalizeRodinModelId(value) {
+  const raw = String(value || '').trim()
+  if (RODIN_MODEL_IDS.has(raw)) return raw
+  return RODIN_MODEL_IDS.has(RODIN_DEFAULT_MODEL) ? RODIN_DEFAULT_MODEL : FALLBACK_RODIN_MODEL
+}
+
+export function buildRodinOptions(payload = {}) {
+  const explicitModelId = payload.rodinModelId || payload.modelId
+  const modelId = normalizeRodinModelId(explicitModelId || RODIN_DEFAULT_MODEL)
+  const preset = RODIN_MODEL_DEFINITIONS.find((model) => model.id === modelId) || RODIN_MODEL_DEFINITIONS[0]
+  const useEnvDefaults = !explicitModelId
+  const envQualityOverride = useEnvDefaults && RODIN_QUALITY_OVERRIDE !== '' ? RODIN_QUALITY_OVERRIDE : undefined
+  const qualityOverride = normalizeOptionalNumber(payload.qualityOverride ?? envQualityOverride ?? preset.qualityOverride)
+
+  return {
+    modelId,
+    modelLabel: preset.label,
+    tier: normalizeString(payload.tier ?? (useEnvDefaults ? RODIN_TIER : undefined) ?? preset.tier, preset.tier),
+    quality: normalizeString(payload.quality ?? (useEnvDefaults ? RODIN_QUALITY : undefined) ?? preset.quality, preset.quality),
+    qualityOverride,
+    meshMode: normalizeString(payload.meshMode ?? payload.mesh_mode ?? (useEnvDefaults ? RODIN_MESH_MODE : undefined) ?? preset.meshMode, preset.meshMode),
+    material: normalizeString(payload.material ?? (useEnvDefaults ? RODIN_MATERIAL : undefined) ?? preset.material, preset.material),
+    addons: normalizeAddons(payload.addons ?? (useEnvDefaults ? RODIN_ADDONS : undefined) ?? preset.addons),
+    hdTexture: normalizeBoolean(payload.hdTexture ?? payload.hd_texture ?? (useEnvDefaults ? RODIN_HD_TEXTURE : undefined), preset.hdTexture),
+    previewRender: normalizeBoolean(payload.previewRender ?? payload.preview_render ?? (useEnvDefaults ? RODIN_PREVIEW_RENDER : undefined), preset.previewRender),
+  }
+}
+
 export function findRodinDownloadItem(raw) {
   const items = Array.isArray(raw?.list) ? raw.list : []
   return items.find((entry) => /\.glb(?:[?#]|$)/i.test(entry.name || entry.url || ''))
@@ -161,12 +233,55 @@ export function findRodinDownloadItem(raw) {
     || null
 }
 
+function appendRodinOptions(form, options) {
+  form.append('material', options.material)
+  form.append('tier', options.tier)
+  form.append('mesh_mode', options.meshMode)
+  form.append('hd_texture', String(options.hdTexture))
+  form.append('preview_render', String(options.previewRender))
+
+  if (options.qualityOverride !== undefined) {
+    form.append('quality_override', String(options.qualityOverride))
+  } else {
+    form.append('quality', options.quality)
+  }
+
+  for (const addon of options.addons) {
+    form.append('addons', addon)
+  }
+}
+
 function requireRodinKey() {
   if (!RODIN_API_KEY) {
     const error = new Error('RODIN_API_KEY is not configured on the backend.')
     error.status = 500
     throw error
   }
+}
+
+function normalizeString(value, fallback) {
+  const normalized = String(value ?? '').trim()
+  return normalized || fallback
+}
+
+function normalizeBoolean(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return Boolean(fallback)
+  if (typeof value === 'boolean') return value
+  const normalized = String(value).trim().toLowerCase()
+  if (['1', 'true', 'yes', 'y', 'on'].includes(normalized)) return true
+  if (['0', 'false', 'no', 'n', 'off'].includes(normalized)) return false
+  return Boolean(fallback)
+}
+
+function normalizeOptionalNumber(value) {
+  if (value === undefined || value === null || value === '') return undefined
+  const number = Number(value)
+  return Number.isFinite(number) ? number : undefined
+}
+
+function normalizeAddons(value) {
+  const list = Array.isArray(value) ? value : String(value || '').split(',')
+  return list.map((item) => String(item).trim()).filter(Boolean)
 }
 
 async function getRodinDownload(taskUuid) {

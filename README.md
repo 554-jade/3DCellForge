@@ -101,6 +101,9 @@ Then set:
 TRIPO_API_KEY=your_tripo_key
 FAL_API_KEY=your_fal_key
 RODIN_API_KEY=your_rodin_api_key
+RODIN_DEFAULT_MODEL=gen2-hq
+# Optional, only if your Hyper3D account/API access accepts it:
+# RODIN_DEFAULT_MODEL=gen25-hq
 OPENAI_API_KEY=your_openai_key
 TTS_PROVIDER=auto
 OPENAI_TTS_API_KEY=your_openai_key
@@ -151,7 +154,14 @@ Local GLB   Import an existing .glb or self-contained .gltf
 
 Tripo uploads use the current STS object-storage flow (`/upload/sts/token`) before creating an `image_to_model` task.
 Fal uploads use the official `@fal-ai/client` storage and queue APIs. Supported Fal models are Tripo3D v2.5 HD, Hunyuan3D v2 Textured Backup, TRELLIS, TripoSR, and Hyper3D Rodin. Pick the active Fal model in `Settings`; the default is Tripo3D v2.5 HD because it usually gives stronger textured demo assets than Hunyuan3D on this workflow.
-Rodin uploads use Hyper3D's multipart `/rodin` task API, then poll `/status` and cache the GLB returned by `/download`.
+Rodin uploads use Hyper3D's official multipart `/api/v2/rodin` task API, then poll `/status` and cache the GLB returned by `/download`. The `Settings` drawer exposes direct Rodin presets:
+
+```text
+Rodin Gen-2 HQ    Official public Gen-2 path with PBR, HD texture, HighPack, and quality_override.
+Rodin Gen-2.5 HQ  Direct official Rodin tier=Gen-2.5 path. This requires Hyper3D API access that accepts Gen-2.5.
+```
+
+The public Hyper3D API documentation currently documents Gen-2 and its high-quality parameters (`hd_texture`, `addons=HighPack`, `quality_override`). Gen-2.5 is wired as a direct official Rodin tier, not through Fal, so an unsupported account or unavailable tier will fail with the official Rodin API error instead of silently falling back.
 Generated GLBs are cached by the Node backend under `.generated-models/`, so later views use the local copy instead of temporary provider URLs.
 The frontend model library is saved in IndexedDB, so successful generated/imported model records survive page refreshes.
 

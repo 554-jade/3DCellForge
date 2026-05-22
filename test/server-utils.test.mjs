@@ -4,7 +4,7 @@ import { assertLocalDiagnosticsRequest, parseDataUrl, sanitizeFileName } from '.
 import { getModelExtension, shouldAttachTripoAuth, validateModelBuffer } from '../server/model-store.mjs'
 import { findFirstValue, findModelUrl, isSuccessStatus } from '../server/object-utils.mjs'
 import { buildFalInput, decodeFalTaskId, encodeFalTaskId, findFalModelFile, normalizeFalModelId, normalizeFalStatus } from '../server/providers/fal.mjs'
-import { decodeRodinTaskId, encodeRodinTaskId, findRodinDownloadItem, normalizeRodinStatus } from '../server/providers/rodin.mjs'
+import { buildRodinOptions, decodeRodinTaskId, encodeRodinTaskId, findRodinDownloadItem, normalizeRodinModelId, normalizeRodinStatus } from '../server/providers/rodin.mjs'
 import { extractJsonObject, normalizeVisionInsight } from '../server/providers/vision.mjs'
 import { compactCustomCellsForStorage, persistCustomCells } from '../src/domain/cellPersistence.js'
 
@@ -105,6 +105,26 @@ describe('server utility functions', () => {
     assert.equal(normalizeRodinStatus(['Waiting']), 'queued')
     assert.equal(normalizeRodinStatus(['Generating']), 'running')
     assert.equal(normalizeRodinStatus(['Done', 'Failed']), 'failed')
+    assert.equal(normalizeRodinModelId('gen25-hq'), 'gen25-hq')
+    assert.deepEqual(
+      buildRodinOptions({ modelId: 'gen25-hq' }),
+      {
+        addons: ['HighPack'],
+        hdTexture: true,
+        material: 'PBR',
+        meshMode: 'Quad',
+        modelId: 'gen25-hq',
+        modelLabel: 'Rodin Gen-2.5 HQ',
+        previewRender: true,
+        quality: 'high',
+        qualityOverride: 200000,
+        tier: 'Gen-2.5',
+      },
+    )
+    assert.deepEqual(
+      buildRodinOptions({ modelId: 'gen2-hq', addons: 'HighPack,GeometryPack', hd_texture: false, qualityOverride: '' }).addons,
+      ['HighPack', 'GeometryPack'],
+    )
     assert.deepEqual(
       findRodinDownloadItem({
         list: [

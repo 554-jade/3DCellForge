@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Box, CheckCircle2, Clock3, Copy, Download, Edit3, Image, Layers3, RefreshCw, RotateCcw, Trash2, X } from 'lucide-react'
 
-import { FAL_MODEL_OPTIONS, GENERATION_MODE_OPTIONS, LANGUAGE_OPTIONS, SCREENSHOT_SCALE_OPTIONS } from '../config/appConfig.js'
+import { FAL_MODEL_OPTIONS, GENERATION_MODE_OPTIONS, LANGUAGE_OPTIONS, RODIN_MODEL_OPTIONS, SCREENSHOT_SCALE_OPTIONS } from '../config/appConfig.js'
 import { CELL_TYPES, WORKSPACE_PANELS } from '../domain/cellData.js'
 import { getCell, getCellProfile, getOrganelleDetail } from '../domain/cellCatalog.js'
 import { getProviderLabel } from '../services/modelApi.js'
@@ -553,6 +553,21 @@ export function WorkspaceDrawer({
               <small>Slightly tighter panels for smaller screens.</small>
             </span>
             <input type="checkbox" checked={settings.compactUi} onChange={(event) => onUpdateSettings({ ...settings, compactUi: event.target.checked })} />
+          </label>
+          <label className="settings-row">
+            <span>
+              <strong>Hyper3D Model</strong>
+              <small>Official Rodin API preset. Gen-2.5 needs enabled Hyper3D API access.</small>
+            </span>
+            <select
+              className="settings-select"
+              value={settings.rodinModelId}
+              onChange={(event) => onUpdateSettings({ ...settings, rodinModelId: event.target.value })}
+            >
+              {RODIN_MODEL_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id} title={option.description}>{option.label}</option>
+              ))}
+            </select>
           </label>
           <label className="settings-row">
             <span>

@@ -5,6 +5,7 @@ import {
   GENERATION_PROVIDER_IDS,
   LANGUAGE_IDS,
   LEGACY_FAL_DEFAULT_MODEL,
+  RODIN_MODEL_IDS,
   SCREENSHOT_SCALE_OPTIONS,
   SETTINGS_STORAGE_VERSION,
   UI_STATE_STORAGE_VERSION,
@@ -20,6 +21,7 @@ export function normalizeSettings(value) {
   if (stored.settingsVersion !== SETTINGS_STORAGE_VERSION) {
     next.generationProvider = GENERATION_PROVIDER_IDS.has(stored.generationProvider) ? stored.generationProvider : DEFAULT_SETTINGS.generationProvider
     next.generationMode = GENERATION_MODE_IDS.has(storedMode) ? storedMode : DEFAULT_SETTINGS.generationMode
+    next.rodinModelId = RODIN_MODEL_IDS.has(stored.rodinModelId) ? stored.rodinModelId : DEFAULT_SETTINGS.rodinModelId
     const storedFalModelId = FAL_MODEL_IDS.has(stored.falModelId) ? stored.falModelId : DEFAULT_SETTINGS.falModelId
     next.falModelId = storedFalModelId === LEGACY_FAL_DEFAULT_MODEL ? DEFAULT_SETTINGS.falModelId : storedFalModelId
     next.screenshotScale = normalizeScreenshotScale(stored.screenshotScale)
@@ -32,6 +34,10 @@ export function normalizeSettings(value) {
 
   if (!GENERATION_MODE_IDS.has(next.generationMode)) {
     next.generationMode = DEFAULT_SETTINGS.generationMode
+  }
+
+  if (!RODIN_MODEL_IDS.has(next.rodinModelId)) {
+    next.rodinModelId = DEFAULT_SETTINGS.rodinModelId
   }
 
   if (!FAL_MODEL_IDS.has(next.falModelId)) {

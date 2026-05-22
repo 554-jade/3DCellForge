@@ -439,7 +439,7 @@ function App() {
           imageDataUrl: imageUrl,
           fileName,
           prompt: getGenerationPrompt(customCell),
-          modelId: provider === 'fal' ? settings.falModelId : undefined,
+          modelId: provider === 'fal' ? settings.falModelId : provider === 'rodin' ? settings.rodinModelId : undefined,
         })
 
         updateCustomCell(customCell.id, (cell) => ({

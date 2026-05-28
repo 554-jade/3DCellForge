@@ -46,7 +46,7 @@ export function getCellProfile(cellId, customCells = getStoredCustomCells()) {
       return {
         ...baseProfile,
         summary: customCell.referenceSummary,
-        comparison: `${customCell.name} is a Khronos glTF reference asset for inspecting material behavior and GLB loader compatibility, not a biological teaching model.`,
+        comparison: `${customCell.name} is a Khronos glTF reference planet for archive data on material behavior and GLB loader compatibility, not a biological teaching model.`,
         occurs: customCell.referenceSource,
         organelles: baseProfile.organelles,
       }
@@ -60,13 +60,13 @@ export function getCellProfile(cellId, customCells = getStoredCustomCells()) {
         ? 'Browser-generated JS depth relief from the uploaded image. This is a visual fallback, not a real GLB mesh.'
         : hasGeneratedModel
         ? 'AI-generated GLB from the uploaded image, loaded as an interactive WebGL model.'
-        : 'Uploaded source asset queued for image-to-3D generation. A procedural preview is used only while the GLB is unavailable.',
+        : 'Uploaded source planet queued for image-to-3D generation. A procedural preview is used only while the GLB is unavailable.',
       comparison: isCinematic
         ? 'This custom sample uses a browser-generated displacement mesh plus transparent depth slabs, not a GLB or full AI-generated mesh.'
         : hasGeneratedModel
         ? 'This custom sample is loaded as a real generated GLB in the WebGL viewer.'
         : 'This custom sample will use a generic procedural preview while generation is running.',
-      occurs: 'Uploaded by the user as a custom 3D model source.',
+      occurs: 'Uploaded by the user as a custom planet model source.',
       organelles: ORGANELLE_ORDER,
     }
   }
@@ -100,15 +100,15 @@ export function getGenerationPrompt(cell) {
       cell.intelligence.generationPrompt,
       'Make it a single integrated object, not a flat relief, not a display base.',
       'Preserve the recognizable silhouette, major volumes, surface details, and material separation.',
-      'Style: polished interactive 3D studio asset, clean PBR materials, soft studio lighting.',
+      'Style: polished interactive planet model, clean PBR materials, soft studio lighting.',
     ].join(' ')
   }
 
   return [
-    `A high quality 3D model generated from the uploaded reference image named ${cell.name}.`,
+    `A high quality planet model generated from the uploaded reference image named ${cell.name}.`,
     'Make it a single integrated object, not a flat relief, not a display base.',
     'Preserve the recognizable silhouette, major volumes, surface details, and material separation.',
-    'Style: polished interactive 3D studio asset, clean PBR materials, soft studio lighting.',
+    'Style: polished interactive planet model, clean PBR materials, soft studio lighting.',
   ].join(' ')
 }
 
@@ -138,7 +138,7 @@ export function isLocalModelFile(file) {
 export function createCustomCell(fileName, imageUrl, options = {}) {
   const template = inferCellTemplate(fileName)
   const base = getCell(template)
-  const name = cleanFileName(fileName) || 'Uploaded Model'
+  const name = cleanFileName(fileName) || 'Uploaded Planet'
   const provider = options.provider || 'tripo'
 
   return {
@@ -146,7 +146,7 @@ export function createCustomCell(fileName, imageUrl, options = {}) {
     name: name.length > 20 ? `${name.slice(0, 20)}...` : name,
     fullName: name,
     sourceFileName: fileName,
-    type: options.type || 'Uploaded 3D Asset',
+    type: options.type || 'Uploaded Planet',
     accent: base.accent,
     custom: true,
     template,

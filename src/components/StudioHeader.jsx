@@ -1,78 +1,32 @@
-import { BookOpen, Box, ChevronDown, Grid3X3, Library, MonitorPlay, ScrollText, Settings } from 'lucide-react'
+import { Compass, Database, Orbit } from 'lucide-react'
 
-const HEADER_TEXT = {
-  en: {
-    title: '3D Model Studio',
-    subtitle: 'Generate, inspect, and present 3D assets',
-    Gallery: 'Gallery',
-    Library: 'Library',
-    Notebooks: 'Notebooks',
-    Logs: 'Logs',
-    Settings: 'Settings',
-    Demo: 'Demo',
-  },
-  zh: {
-    title: '3D模型工作室',
-    subtitle: '生成、检查和演示3D模型',
-    Gallery: '作品集',
-    Library: '模型库',
-    Notebooks: '笔记',
-    Logs: '日志',
-    Settings: '设置',
-    Demo: '演示',
-  },
-}
-
-export function StudioHeader({ activePanel, setActivePanel, demoMode, language = 'en', onToggleDemoMode, onNotify }) {
-  const text = HEADER_TEXT[language] || HEADER_TEXT.en
-
-  function openPanel(panel) {
-    const next = activePanel === panel ? null : panel
-    setActivePanel(next)
-    onNotify(next ? `${panel} opened` : `${panel} closed`)
-  }
-
+export function StudioHeader({ archiveMode, presentationMode, onToggleArchiveMode, onTogglePresentationMode }) {
   return (
-    <header className="studio-header">
-      <div className="studio-brand">
-        <div className="brand-mark">
-          <Box size={30} />
+    <header className="celestial-header">
+      <div className="celestial-brand">
+        <div className="celestial-mark">
+          <Orbit size={28} />
         </div>
         <div>
-          <strong>{text.title}</strong>
-          <span>{text.subtitle}</span>
+          <strong>CELESTIAL ARCHIVE</strong>
+          <span>A 3D archive of planets, names, myths, and cosmic data.</span>
         </div>
       </div>
-      <nav className="studio-nav">
-        <button type="button" className={activePanel === 'Gallery' ? 'active' : ''} onClick={() => openPanel('Gallery')}>
-          <Grid3X3 size={15} />
-          {text.Gallery}
+
+      <nav className="celestial-nav" aria-label="Celestial Archive navigation">
+        <button type="button" className={!archiveMode && !presentationMode ? 'active' : ''}>
+          <Compass size={16} />
+          Explore
         </button>
-        <button type="button" className={activePanel === 'Library' ? 'active' : ''} onClick={() => openPanel('Library')}>
-          <Library size={15} />
-          {text.Library}
+        <button type="button" className={archiveMode ? 'active' : ''} onClick={onToggleArchiveMode}>
+          <Database size={16} />
+          Archive Mode
         </button>
-        <button type="button" className={activePanel === 'Notebooks' ? 'active' : ''} onClick={() => openPanel('Notebooks')}>
-          <BookOpen size={15} />
-          {text.Notebooks}
-        </button>
-        <button type="button" className={activePanel === 'Logs' ? 'active' : ''} onClick={() => openPanel('Logs')}>
-          <ScrollText size={15} />
-          {text.Logs}
-        </button>
-        <button type="button" className={activePanel === 'Settings' ? 'active' : ''} onClick={() => openPanel('Settings')}>
-          <Settings size={15} />
-          {text.Settings}
-        </button>
-        <button type="button" className={demoMode ? 'active' : ''} onClick={onToggleDemoMode}>
-          <MonitorPlay size={15} />
-          {text.Demo}
+        <button type="button" className={presentationMode ? 'active' : ''} onClick={onTogglePresentationMode}>
+          <Orbit size={16} />
+          Presentation Mode
         </button>
       </nav>
-      <button type="button" className={activePanel === 'Profile' ? 'profile-button active' : 'profile-button'} onClick={() => openPanel('Profile')}>
-        <Box size={18} />
-        <ChevronDown size={13} />
-      </button>
     </header>
   )
 }

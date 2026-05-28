@@ -29,7 +29,7 @@ export function GenerationTaskCenter({ customCells = [], generationHistory = [],
       {tasks.length === 0 ? (
         <div className="task-empty">
           <Clock3 size={15} />
-          <span>Upload an image or GLB to start a model job.</span>
+          <span>Upload an image or GLB to start a planet model job.</span>
         </div>
       ) : (
         <div className="task-list">

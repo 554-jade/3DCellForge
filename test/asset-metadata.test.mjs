@@ -15,7 +15,7 @@ describe('asset metadata inference', () => {
     })
 
     assert.equal(metadata.subtitle, 'Museum Artifact')
-    assert.match(metadata.description, /museum-style artifact/i)
+    assert.match(metadata.description, /museum-style planet archive entry/i)
     assert.deepEqual(metadata.facts.find(([label]) => label === 'Scene'), ['Scene', 'Museum Turntable'])
     assert.ok(metadata.tags.includes('artifact'))
   })

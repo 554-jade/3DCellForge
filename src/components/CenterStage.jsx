@@ -1,422 +1,339 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Box, Camera, CircleDot, Eye, Gauge, Layers3, Move3D, RotateCcw, Upload } from 'lucide-react'
-import { getCell, getGeneratedModelUrl, getOrganelleDetail } from '../domain/cellCatalog.js'
-import { downloadCanvasImage } from '../lib/downloads.js'
-import { getSceneProfile } from '../lib/assetIntelligence.js'
-import { downloadLayeredPngSnapshot } from '../lib/imagePipeline.js'
-import { formatBytes, formatDuration, formatNumber, getModelQuality, inspectModelUrl } from '../lib/modelQuality.js'
-import { inferMotionProfile } from '../lib/motionProfiles.js'
-import { canUseWebGL } from '../lib/webgl.js'
-import { getProviderLabel } from '../services/modelApi.js'
-import { CellFallback, CellScene, CinematicLayerVisual, ViewerErrorBoundary } from '../viewer/CellViewer.jsx'
+import { Component, Suspense, useEffect, useMemo, useRef } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { OrbitControls, Stars, useTexture } from '@react-three/drei'
+import * as THREE from 'three'
 
-function ViewerControls({ crossSection, setCrossSection, viewMode, setViewMode, supportsPartControls, onModeChange }) {
-  const modes = [
-    { id: 'solid', icon: Box, label: 'Solid view', status: 'Solid' },
-    { id: 'layers', icon: Layers3, label: 'X-Ray layer view', status: 'X-Ray' },
-    { id: 'focus', icon: CircleDot, label: 'Inspect focus view', status: 'Inspect' },
-  ]
+import { PlanetCallouts } from './PlanetCallouts.jsx'
 
+export function CenterStage({ planet, archiveMode, presentationMode, resetNonce, onCanvasReady }) {
   return (
-    <div className="viewer-controls">
-      <span>View Mode</span>
-      <div className="mode-buttons">
-        {modes.map((mode) => {
-          const Icon = mode.icon
-          return (
-            <button
-              key={mode.id}
-              type="button"
-              className={viewMode === mode.id ? 'active' : ''}
-              onClick={() => {
-                setViewMode(mode.id)
-                onModeChange?.(mode.status)
-              }}
-              title={mode.label}
-              aria-label={mode.label}
-            >
-              <Icon size={17} />
-            </button>
-          )
-        })}
+    <section className="planet-viewer-panel">
+      <div className="viewer-background-glow" />
+      <div className="viewer-title">
+        <span>{archiveMode ? 'ARCHIVE MODE' : 'EXPLORE MODE'}</span>
+        <h1>{planet.name}</h1>
+        <p>{planet.subtitle}</p>
+        <PlanetBadges planet={planet} />
       </div>
-      {supportsPartControls && (
-        <label className="toggle-row" title="Cut into starter structural models">
-          <span>Cross-Section</span>
-          <input
-            type="checkbox"
-            checked={crossSection}
-            onChange={(event) => setCrossSection(event.target.checked)}
-          />
-          <i />
-        </label>
-      )}
-    </div>
-  )
-}
 
-export function CenterStage({
-  selectedCell,
-  selectedOrganelle,
-  setSelectedOrganelle,
-  crossSection,
-  setCrossSection,
-  renderQuality,
-  screenshotScale = 1,
-  customCells,
-  generationHistory = [],
-  demoMode = false,
-  onNotify,
-  onExport,
-  exportAvailable,
-  exportReason,
-  onExporterReady,
-  onRetryGeneration,
-  onOpenInspector,
-}) {
-  const [viewMode, setViewMode] = useState('solid')
-  const [autoRotate, setAutoRotate] = useState(false)
-  const [isIsolated, setIsIsolated] = useState(false)
-  const [hideOthers, setHideOthers] = useState(false)
-  const [proofMode, setProofMode] = useState(false)
-  const [resetNonce, setResetNonce] = useState(0)
-  const [capturePulse, setCapturePulse] = useState(false)
-  const [viewerError, setViewerError] = useState(null)
-  const [modelMetrics, setModelMetrics] = useState(null)
-  const cell = getCell(selectedCell, customCells)
-  const modelCellId = cell.custom ? cell.template : selectedCell
-  const referenceImageUrl = cell.custom ? cell.imageUrl || cell.thumbnailUrl || '' : ''
-  const generatedModelUrl = getGeneratedModelUrl(cell)
-  const generation = cell.custom ? cell.generation : null
-  const generationProviderLabel = getProviderLabel(generation?.provider)
-  const generationFailureTitle = generation?.requestedProvider === 'auto' ? '3D generation failed' : `${generationProviderLabel} generation failed`
-  const isCinematicCell = cell.custom && generation?.provider === 'cinematic'
-  const supportsPartControls = !cell.custom && !generatedModelUrl && !isCinematicCell
-  const effectiveAutoRotate = autoRotate || demoMode
-  const effectiveHideOthers = demoMode || !supportsPartControls ? false : hideOthers || viewMode === 'focus'
-  const effectiveIsolated = demoMode ? false : isIsolated || viewMode === 'focus'
-  const effectiveProofMode = demoMode ? false : proofMode
-  const effectiveViewMode = demoMode ? 'solid' : viewMode
-  const effectiveCrossSection = supportsPartControls && (crossSection || effectiveViewMode === 'layers')
-  const effectiveStatusMode = effectiveViewMode === 'layers' ? 'X-Ray' : effectiveViewMode === 'focus' ? 'Inspect' : 'Solid'
-  const detail = getOrganelleDetail(selectedCell, selectedOrganelle, customCells)
-  const webglAvailable = canUseWebGL()
-  const generationPending = cell.custom && !generatedModelUrl && generation?.status && !['failed', 'local'].includes(generation.status)
-  const generationFailed = cell.custom && !generatedModelUrl && generation?.status === 'failed'
-  const stageStatusText = isCinematicCell
-    ? `JS image relief · ${effectiveAutoRotate ? 'Auto orbit' : 'Manual orbit'} · ${effectiveStatusMode}`
-    : `${generatedModelUrl ? `${generationProviderLabel} GLB loaded` : generationFailed ? `${generationProviderLabel} failed; source image shown` : referenceImageUrl ? `${generationProviderLabel} ${generation?.status || 'pending'}` : webglAvailable ? 'WebGL live 3D' : 'Fallback image'} · ${effectiveAutoRotate || effectiveProofMode ? 'Auto rotate' : 'Manual orbit'} · ${effectiveStatusMode}`
-  const referenceLabel = isCinematicCell
-    ? 'Source image used for browser-side JS depth relief'
-    : generatedModelUrl
-    ? `Source image used for ${generationProviderLabel} 3D generation`
-    : `Source image for ${generationProviderLabel} generation`
-  const viewerResetKey = `${selectedCell}-${generatedModelUrl}-${generation?.provider || 'built-in'}-${resetNonce}`
-  const activeViewerError = viewerError?.key === viewerResetKey ? viewerError.message : ''
-  const activeModelMetrics = modelMetrics?.url === generatedModelUrl ? modelMetrics.data : null
-  const quality = useMemo(() => getModelQuality(cell, activeModelMetrics, generationHistory), [activeModelMetrics, cell, generationHistory])
-  const motionProfile = useMemo(() => inferMotionProfile(cell), [cell])
-  const sceneProfile = useMemo(() => getSceneProfile(cell), [cell])
-  const viewerFallback = (
-    <CellFallback
-      selectedCell={selectedCell}
-      modelCellId={modelCellId}
-      referenceImageUrl={referenceImageUrl}
-      selectedOrganelle={selectedOrganelle}
-      onSelectOrganelle={setSelectedOrganelle}
-    />
-  )
+      {archiveMode && <div className="center-archive-label">ARCHIVE MODE</div>}
+      <PlanetCallouts callouts={planet.callouts} archiveMode={archiveMode} />
+      <MoonLabelOverlay moons={planet.moons} />
 
-  function handleRotate() {
-    const next = !autoRotate
-    setAutoRotate(next)
-    onNotify(next ? 'Auto rotate enabled' : 'Auto rotate paused')
-  }
-
-  function handleIsolate() {
-    if (!supportsPartControls) return
-    const next = !isIsolated
-    setIsIsolated(next)
-    if (next) setViewMode('focus')
-    onNotify(next ? `${detail.title} focus mode` : 'Focus mode off')
-  }
-
-  function handleHideOthers() {
-    if (!supportsPartControls) return
-    const next = !hideOthers
-    setHideOthers(next)
-    onNotify(next ? `Showing ${detail.title} with model shell` : 'All structures visible')
-  }
-
-  function handleResetView() {
-    setAutoRotate(false)
-    setIsIsolated(false)
-    setHideOthers(false)
-    setProofMode(false)
-    setViewMode('solid')
-    setResetNonce((value) => value + 1)
-    onNotify('View reset')
-  }
-
-  function handleProofMode() {
-    const next = !proofMode
-    setProofMode(next)
-    if (next) {
-      setViewMode('focus')
-      setHideOthers(false)
-      setAutoRotate(true)
-      onOpenInspector?.()
-    }
-    onNotify(next ? 'Inspection mode enabled' : 'Inspection mode off')
-  }
-
-  function handleViewModeChange(modeLabel) {
-    onNotify(`${modeLabel} view enabled`)
-  }
-
-  async function handleScreenshot() {
-    const ok = isCinematicCell && referenceImageUrl
-      ? (webglAvailable ? downloadCanvasImage(`${selectedCell}-${selectedOrganelle}.png`, screenshotScale) : await downloadLayeredPngSnapshot(referenceImageUrl, `${selectedCell}-${selectedOrganelle}.png`))
-      : downloadCanvasImage(`${selectedCell}-${selectedOrganelle}.png`, screenshotScale)
-    setCapturePulse(true)
-    window.setTimeout(() => setCapturePulse(false), 280)
-    onNotify(ok ? 'Screenshot downloaded' : 'Screenshot unavailable in this browser')
-  }
-
-  function handleViewerError(error) {
-    console.error(error)
-    const message = error instanceof Error ? error.message : 'The saved 3D preview could not be loaded.'
-    setViewerError({ key: viewerResetKey, message })
-    onExporterReady?.(null)
-    onNotify('3D preview unavailable; fallback view shown')
-  }
-
-  useEffect(() => {
-    if (isCinematicCell) onExporterReady?.(null)
-  }, [isCinematicCell, onExporterReady])
-
-  useEffect(() => {
-    let cancelled = false
-
-    if (!generatedModelUrl) return undefined
-
-    inspectModelUrl(generatedModelUrl)
-      .then((metrics) => {
-        if (!cancelled) setModelMetrics({ url: generatedModelUrl, data: metrics })
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setModelMetrics({ url: generatedModelUrl, data: { error: error instanceof Error ? error.message : 'Model metrics unavailable.' } })
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [generatedModelUrl])
-
-  return (
-    <section className={`stage-panel motion-${motionProfile.id} scene-${sceneProfile.id}`}>
-      <div className="stage-title">
-        <div>
-          <h1>{cell.name}</h1>
-          <p>{cell.type}</p>
-        </div>
-      </div>
-      <ViewerControls
-        crossSection={crossSection}
-        setCrossSection={setCrossSection}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        supportsPartControls={supportsPartControls}
-        onModeChange={handleViewModeChange}
-      />
-      {demoMode && <PresentationMotionField profile={sceneProfile.id} />}
-      {demoMode && <DemoShowcaseOverlay cell={cell} quality={quality} referenceImageUrl={referenceImageUrl} motionProfile={motionProfile} sceneProfile={sceneProfile} />}
-      {!demoMode && <ModelQualityCard quality={quality} />}
-      <div className={`cell-viewer ${effectiveViewMode} ${effectiveIsolated ? 'is-isolated' : ''} ${generatedModelUrl ? 'has-glb' : ''} ${webglAvailable ? 'webgl-ready' : ''} ${isCinematicCell ? 'cinematic-viewer' : ''}`}>
-        <ViewerErrorBoundary resetKey={viewerResetKey} onError={handleViewerError} fallback={viewerFallback}>
-          {isCinematicCell ? (
-            <CinematicLayerVisual
-              imageUrl={referenceImageUrl}
-              selectedOrganelle={selectedOrganelle}
-              onSelectOrganelle={setSelectedOrganelle}
-              autoRotate={effectiveAutoRotate || effectiveProofMode}
-              presentationMode={demoMode}
-              motionProfile={sceneProfile.id}
-              viewMode={effectiveViewMode}
-            />
-          ) : (
-            <>
-              <CellFallback selectedCell={selectedCell} modelCellId={modelCellId} referenceImageUrl={referenceImageUrl} selectedOrganelle={selectedOrganelle} onSelectOrganelle={setSelectedOrganelle} />
-              {!generationFailed && (
-                <CellScene
-                  key={`${selectedCell}-${resetNonce}`}
-                  selectedCell={selectedCell}
-                  modelCellId={modelCellId}
-                  referenceImageUrl={referenceImageUrl}
-                  generatedModelUrl={generatedModelUrl}
-                  selectedOrganelle={selectedOrganelle}
-                  crossSection={effectiveCrossSection}
-                  autoRotate={effectiveAutoRotate}
-                  hideOthers={effectiveHideOthers}
-                  proofMode={effectiveProofMode}
-                  viewMode={effectiveViewMode}
-                  renderQuality={renderQuality}
-                  presentationMode={demoMode}
-                  motionProfile={sceneProfile.id}
-                  onSelectOrganelle={setSelectedOrganelle}
-                  onExporterReady={onExporterReady}
-                />
+      <div className="planet-canvas-shell">
+        <Canvas
+          key={`${planet.id}-${resetNonce}`}
+          camera={{ position: [0, 0.35, 6.6], fov: 40 }}
+          dpr={[1, 1.8]}
+          gl={{ antialias: true, preserveDrawingBuffer: true, alpha: true }}
+          onCreated={({ gl }) => onCanvasReady?.(gl.domElement)}
+        >
+          <color attach="background" args={['#020617']} />
+          <ambientLight intensity={1.08} />
+          <hemisphereLight args={['#e0f2fe', '#020617', 0.72]} />
+          <directionalLight position={[5, 3, 5]} intensity={2.25} color="#ffffff" />
+          <pointLight position={[-4, -2, -3]} intensity={0.62} color="#7dd3fc" />
+          <pointLight position={[0, 3, -4]} intensity={0.48} color="#a78bfa" />
+          <Stars radius={90} depth={45} count={1900} factor={4} saturation={0.2} fade speed={0.32} />
+          <TextureBoundary key={planet.id} fallback={<PlanetScene planet={planet} presentationMode={presentationMode} />}>
+            <Suspense fallback={<PlanetScene planet={planet} presentationMode={presentationMode} />}>
+              {planet.textureUrl ? (
+                <TexturedPlanetScene planet={planet} presentationMode={presentationMode} />
+              ) : (
+                <PlanetScene planet={planet} presentationMode={presentationMode} />
               )}
-            </>
-          )}
-        </ViewerErrorBoundary>
+            </Suspense>
+          </TextureBoundary>
+          <OrbitControls
+            enablePan={false}
+            enableDamping
+            dampingFactor={0.06}
+            minDistance={4.2}
+            maxDistance={9}
+          />
+        </Canvas>
       </div>
-      {referenceImageUrl && (
-        <div className="custom-reference-layer">
-          <img src={referenceImageUrl} alt={`${cell.name} uploaded reference`} />
-          <span>{referenceLabel}</span>
-        </div>
-      )}
-      {generationPending && (
-        <div className="generation-overlay">
-          <strong>{generation.status === 'uploading' ? `Uploading to ${generationProviderLabel}` : `Generating with ${generationProviderLabel}`}</strong>
-          <span>{generation.message || 'Waiting for AI-generated GLB...'}</span>
-          <div className="generation-meter">
-            <i />
+
+      {presentationMode && (
+        <div className="presentation-overlay">
+          <span>CELESTIAL ARCHIVE</span>
+          <strong>{planet.name}</strong>
+          <small>{planet.subtitle}</small>
+          <div className="presentation-badges">
+            <em>{planet.surfaceTag}</em>
+            <em>{planet.explorationDifficulty}</em>
+            <em>{formatMoonCount(planet.moonCount)}</em>
           </div>
+          <p>{planet.archiveNote}</p>
         </div>
       )}
-      {generationFailed && (
-        <div className="generation-overlay failed">
-          <strong>{generationFailureTitle}</strong>
-          <span>{generation.message || 'The saved upload failed before a GLB was returned.'}</span>
-          <button type="button" onClick={() => onRetryGeneration?.(cell.id)}>Retry Generation</button>
-        </div>
-      )}
-      {activeViewerError && !generationFailed && (
-        <div className="generation-overlay failed">
-          <strong>3D preview unavailable</strong>
-          <span>{generatedModelUrl ? 'The saved GLB could not be loaded. Showing the saved source image or fallback model instead.' : activeViewerError}</span>
-          {cell.custom && !cell.reference && cell.imageUrl && <button type="button" onClick={() => onRetryGeneration?.(cell.id)}>Retry Generation</button>}
-        </div>
-      )}
-      <div className="stage-status">
-        {stageStatusText}
-      </div>
-      {capturePulse && <div className="capture-pulse" />}
-      <div className={`stage-toolbar ${supportsPartControls ? 'with-structure' : 'compact-tools'}`}>
-        <button type="button" className={autoRotate ? 'active' : ''} onClick={handleRotate} aria-pressed={autoRotate}>
-          <Move3D size={14} />
-          Rotate
-        </button>
-        {supportsPartControls && (
-          <button
-            type="button"
-            className={isIsolated ? 'active' : ''}
-            onClick={handleIsolate}
-            aria-pressed={isIsolated}
-            title="Focus the selected starter model part"
-          >
-            <Eye size={14} />
-            Focus Part
-          </button>
-        )}
-        {supportsPartControls && (
-          <button
-            type="button"
-            className={hideOthers ? 'active' : ''}
-            onClick={handleHideOthers}
-            aria-pressed={hideOthers}
-            title="Hide non-selected starter model parts"
-          >
-            <Layers3 size={14} />
-            Hide Parts
-          </button>
-        )}
-        <button type="button" onClick={handleResetView}>
-          <RotateCcw size={14} />
-          Reset View
-        </button>
-        <button type="button" className={proofMode ? 'active proof-active' : ''} onClick={handleProofMode} aria-pressed={proofMode}>
-          <Box size={14} />
-          Inspect
-        </button>
-        <span />
-        <button type="button" onClick={handleScreenshot}>
-          <Camera size={14} />
-          Screenshot
-        </button>
-        <button type="button" onClick={onExport} disabled={!exportAvailable} title={exportReason}>
-          <Upload size={14} />
-          3D Export
-        </button>
-      </div>
     </section>
   )
 }
 
-function PresentationMotionField({ profile }) {
-  if (!['road', 'aircraft', 'vessel', 'artifact', 'product', 'specimen'].includes(profile)) return null
+class TextureBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error) {
+    console.warn('Celestial Archive: texture failed to load; using fallback material.', error)
+  }
+
+  render() {
+    if (this.state.hasError) return this.props.fallback
+    return this.props.children
+  }
+}
+
+function TexturedPlanetScene({ planet, presentationMode }) {
+  const loadedTexture = useTexture(planet.textureUrl)
+  const texture = usePreparedTexture(loadedTexture, planet.textureUrl)
+
+  if (planet.id === 'saturn') {
+    return <TexturedSaturnScene planet={planet} presentationMode={presentationMode} texture={texture} />
+  }
+
+  return <PlanetScene planet={planet} presentationMode={presentationMode} texture={texture} />
+}
+
+function TexturedSaturnScene({ planet, presentationMode, texture }) {
+  const loadedRingTexture = useTexture('/textures/saturn-ring.png')
+  const ringTexture = usePreparedTexture(loadedRingTexture, '/textures/saturn-ring.png')
+
+  return <PlanetScene planet={planet} presentationMode={presentationMode} texture={texture} ringTexture={ringTexture} />
+}
+
+function MoonLabelOverlay({ moons = [] }) {
+  if (!moons.length) return null
 
   return (
-    <div className={`presentation-motion-field ${profile}`} aria-hidden="true">
-      <span />
-      <span />
-      <span />
-      <span />
-      <span />
-      <span />
+    <div className="moon-label-overlay" aria-label="Moon orbit labels">
+      {moons.slice(0, 4).map((moon, index) => (
+        <div className={`moon-label moon-label-${index + 1}`} key={moon.name}>
+          <strong>{moon.name}</strong>
+          <span>Orbit: {moon.period}</span>
+        </div>
+      ))}
     </div>
   )
 }
 
-function ModelQualityCard({ quality }) {
+function PlanetBadges({ planet }) {
   return (
-    <aside className="model-quality-card" aria-label="Model quality score">
-      <div className="quality-score">
-        <Gauge size={16} />
-        <strong>{quality.score}</strong>
-        <span>{quality.verdict}</span>
-      </div>
-      <div className="quality-stats">
-        <span><strong>{quality.hasGlb ? 'Yes' : 'No'}</strong><small>GLB</small></span>
-        <span><strong>{quality.loadingMetrics ? '...' : formatBytes(quality.fileBytes)}</strong><small>file</small></span>
-        <span><strong>{quality.loadingMetrics ? '...' : formatNumber(quality.triangleCount)}</strong><small>tris</small></span>
-        <span><strong>{quality.loadingMetrics ? '...' : quality.textureCount}</strong><small>textures</small></span>
-      </div>
-    </aside>
+    <div className="planet-badges">
+      <span>{planet.surfaceTag}</span>
+      <span>{planet.temperature}</span>
+      <span>{formatMoonCount(planet.moonCount)}</span>
+    </div>
   )
 }
 
-function DemoShowcaseOverlay({ cell, quality, referenceImageUrl, motionProfile, sceneProfile }) {
+function PlanetScene({ planet, presentationMode, texture = null, ringTexture = null }) {
+  const planetRef = useRef(null)
+  const moonSystemRef = useRef(null)
+  const radius = getDisplayRadius(planet)
+
+  useFrame((_, delta) => {
+    if (planetRef.current) planetRef.current.rotation.y += delta * (presentationMode ? 0.16 : 0.24)
+    if (moonSystemRef.current) moonSystemRef.current.rotation.y += delta * 0.05
+  })
+
   return (
-    <div className="demo-showcase-overlay">
-      <div className="demo-showcase-title">
-        <span>3D Model Studio</span>
-        <strong>{cell.name}</strong>
-        <small>{quality.providerLabel} · {quality.hasGlb ? 'GLB asset' : quality.status} · {quality.verdict} · {motionProfile.label}</small>
-        <p>{sceneProfile.summary}</p>
-        <div className="demo-scene-badges">
-          {sceneProfile.badges.map((badge) => (
-            <em key={badge}>{badge}</em>
-          ))}
-        </div>
-      </div>
-      <div className="demo-metric-strip">
-        <span><strong>{quality.score}</strong><small>score</small></span>
-        <span><strong>{formatBytes(quality.fileBytes)}</strong><small>file</small></span>
-        <span><strong>{formatNumber(quality.triangleCount)}</strong><small>triangles</small></span>
-        <span><strong>{quality.textureCount}</strong><small>textures</small></span>
-        <span><strong>{formatDuration(quality.durationMs)}</strong><small>time</small></span>
-      </div>
-      {referenceImageUrl && (
-        <div className="demo-source-thumb">
-          <img src={referenceImageUrl} alt={`${cell.name} source reference`} />
-          <span>source</span>
-        </div>
-      )}
-    </div>
+    <group>
+      {planet.hasRings || planet.id === 'saturn' || planet.id === 'uranus' ? (
+        <NaturalRings planet={planet} radius={radius} ringTexture={ringTexture} />
+      ) : null}
+
+      <group ref={planetRef}>
+        <PlanetBody planet={planet} radius={radius} texture={texture} />
+      </group>
+
+      <MoonSystem refObject={moonSystemRef} moons={planet.moons} planetRadius={radius} />
+
+      <mesh scale={[radius * 1.05, radius * 1.05, radius * 1.05]}>
+        <sphereGeometry args={[1, 96, 96]} />
+        <meshBasicMaterial color={planet.color} transparent opacity={0.08} side={THREE.BackSide} />
+      </mesh>
+    </group>
   )
+}
+
+function PlanetBody({ planet, radius, texture = null }) {
+  const isExoplanet = planet.category === 'EXOPLANET ARCHIVE'
+  const isJupiter = planet.id === 'jupiter'
+
+  return (
+    <>
+      <mesh renderOrder={1}>
+        <sphereGeometry args={[radius, 128, 128]} />
+        <meshStandardMaterial
+          map={texture || null}
+          color={texture ? '#ffffff' : planet.color}
+          roughness={isExoplanet ? 0.72 : 0.88}
+          metalness={0}
+          emissive={texture ? '#000000' : planet.color}
+          emissiveIntensity={texture ? 0 : isExoplanet ? 0.13 : 0.045}
+        />
+      </mesh>
+      {!texture && <SurfaceVariation planet={planet} radius={radius} />}
+      {!texture && isJupiter && <JupiterBands radius={radius} />}
+    </>
+  )
+}
+
+function SurfaceVariation({ planet, radius }) {
+  const palette = planet.visualPalette ?? [planet.color]
+
+  return (
+    <group rotation={[0.2, -0.45, 0.08]}>
+      <mesh scale={[1.006, 1.006, 1.006]}>
+        <sphereGeometry args={[radius, 96, 96, 0.35, Math.PI * 1.05, 0.2, Math.PI * 0.72]} />
+        <meshBasicMaterial color={palette[1] ?? planet.color} transparent opacity={0.16} />
+      </mesh>
+      <mesh scale={[1.008, 1.008, 1.008]} rotation={[0.15, 0.9, 0.12]}>
+        <sphereGeometry args={[radius, 96, 96, 2.8, Math.PI * 0.82, 1.25, Math.PI * 0.42]} />
+        <meshBasicMaterial color={palette[2] ?? planet.color} transparent opacity={0.12} />
+      </mesh>
+    </group>
+  )
+}
+
+function JupiterBands({ radius }) {
+  const bands = [
+    { y: -0.48, color: '#92400e', opacity: 0.3 },
+    { y: -0.22, color: '#fef3c7', opacity: 0.2 },
+    { y: 0.05, color: '#b45309', opacity: 0.24 },
+    { y: 0.32, color: '#fde68a', opacity: 0.18 },
+  ]
+
+  return (
+    <group>
+      {bands.map((band) => {
+        const bandRadius = Math.sqrt(Math.max(radius * radius - band.y * band.y, 0.1))
+        return (
+          <mesh key={`${band.y}-${band.color}`} position={[0, band.y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[bandRadius, 0.018, 8, 192]} />
+            <meshBasicMaterial color={band.color} transparent opacity={band.opacity} />
+          </mesh>
+        )
+      })}
+    </group>
+  )
+}
+
+function NaturalRings({ planet, radius, ringTexture = null }) {
+  if (planet.id === 'saturn') {
+    return (
+      <group rotation={[THREE.MathUtils.degToRad(68), 0, THREE.MathUtils.degToRad(-18)]}>
+        {ringTexture ? (
+          <RingBand inner={radius * 1.18} outer={radius * 2.02} color="#ffffff" opacity={0.84} texture={ringTexture} />
+        ) : (
+          <>
+            <RingBand inner={radius * 1.25} outer={radius * 1.52} color="#fde68a" opacity={0.28} />
+            <RingBand inner={radius * 1.58} outer={radius * 1.78} color="#d6b16a" opacity={0.22} />
+            <RingBand inner={radius * 1.86} outer={radius * 2.08} color="#f8e1a0" opacity={0.18} />
+          </>
+        )}
+      </group>
+    )
+  }
+
+  if (planet.id === 'uranus') {
+    return (
+      <group rotation={[THREE.MathUtils.degToRad(82), 0.1, THREE.MathUtils.degToRad(10)]}>
+        <RingBand inner={radius * 1.42} outer={radius * 1.55} color="#a5f3fc" opacity={0.18} />
+        <RingBand inner={radius * 1.72} outer={radius * 1.82} color="#67e8f9" opacity={0.12} />
+      </group>
+    )
+  }
+
+  return null
+}
+
+function RingBand({ inner, outer, color, opacity, texture = null }) {
+  return (
+    <mesh renderOrder={0}>
+      <ringGeometry args={[inner, outer, 192, 1, Math.PI, Math.PI]} />
+      <meshBasicMaterial
+        map={texture || null}
+        color={color}
+        side={THREE.DoubleSide}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+      />
+    </mesh>
+  )
+}
+
+function MoonSystem({ refObject, moons = [], planetRadius }) {
+  if (!moons.length) return null
+
+  return (
+    <group ref={refObject} rotation={[0.48, 0.12, -0.18]}>
+      {moons.map((moon, index) => (
+        <MoonMarker key={moon.name} moon={moon} index={index} planetRadius={planetRadius} />
+      ))}
+    </group>
+  )
+}
+
+function MoonMarker({ moon, index, planetRadius }) {
+  const angle = index * 1.55 + 0.45
+  const orbitRadius = moon.orbitRadius * planetRadius
+  const x = Math.cos(angle) * orbitRadius
+  const z = Math.sin(angle) * orbitRadius
+
+  return (
+    <group>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[orbitRadius, 0.004, 8, 192]} />
+        <meshBasicMaterial color="#7dd3fc" transparent opacity={0.2} />
+      </mesh>
+      <mesh position={[x, 0, z]}>
+        <sphereGeometry args={[Math.max(moon.size * planetRadius, 0.035), 32, 32]} />
+        <meshStandardMaterial color={moon.color} roughness={0.86} metalness={0} />
+      </mesh>
+    </group>
+  )
+}
+
+function getDisplayRadius(planet) {
+  if (planet.id === 'saturn' || planet.id === 'uranus') return 0.9
+  if (planet.category === 'GIANT PLANETS') return 1.18
+  if (planet.category === 'MAJOR MOONS') return 0.84
+  if (planet.category === 'DWARF / SMALL BODIES') return 0.82
+  if (planet.category === 'EXOPLANET ARCHIVE') return 0.92
+  return 1.02
+}
+
+function formatMoonCount(moonCount) {
+  if (!moonCount) return 'No major moons'
+  if (moonCount === 1) return '1 moon'
+  return `${moonCount} moons`
+}
+
+function usePreparedTexture(texture, textureUrl) {
+  const preparedTexture = useMemo(() => {
+    if (!texture || !textureUrl) return null
+
+    const clonedTexture = texture.clone()
+    clonedTexture.colorSpace = THREE.SRGBColorSpace
+    clonedTexture.anisotropy = 8
+    clonedTexture.needsUpdate = true
+
+    return clonedTexture
+  }, [texture, textureUrl])
+
+  useEffect(() => {
+    return () => preparedTexture?.dispose()
+  }, [preparedTexture])
+
+  return preparedTexture
 }

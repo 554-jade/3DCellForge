@@ -34,7 +34,7 @@ test('model quality scoring', async (t) => {
     )
 
     assert.equal(quality.score, 98)
-    assert.equal(quality.verdict, 'Demo-ready')
+    assert.equal(quality.verdict, 'Presentation-ready')
     assert.equal(quality.hasGlb, true)
     assert.equal(quality.fileBytes, 2_400_000)
   })

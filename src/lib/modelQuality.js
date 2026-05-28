@@ -127,7 +127,7 @@ function getVerdict(score, { cell, failed, hasGlb, metricError }) {
   if (metricError) return 'GLB loaded, metrics limited'
   if (cell.custom && !hasGlb && cell.generation?.provider === 'cinematic') return 'Preview only'
   if (cell.custom && !hasGlb) return 'Waiting for GLB'
-  if (score >= 86) return 'Demo-ready'
+  if (score >= 86) return 'Presentation-ready'
   if (score >= 72) return 'Solid'
   if (score >= 55) return 'Usable'
   return 'Needs better source'

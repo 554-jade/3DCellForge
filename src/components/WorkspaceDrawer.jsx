@@ -71,8 +71,8 @@ function getAssetKind(cell) {
   if (cell.reference) return 'Reference GLB'
   if (cell.generation?.provider === 'local') return 'Local Import'
   if (cell.generation?.provider === 'cinematic') return 'JS Depth Preview'
-  if (cell.generation?.modelUrl) return 'Generated GLB'
-  if (cell.custom) return 'Generated Asset'
+  if (cell.generation?.modelUrl) return 'Generated Planet Model'
+  if (cell.custom) return 'Generated Planet'
   return 'Starter Scene'
 }
 
@@ -188,14 +188,14 @@ export function WorkspaceDrawer({
             </span>
           </div>
           <div className="asset-stat-grid">
-            <span><strong>{modelUrl ? 'GLB' : 'Preview'}</strong><small>asset</small></span>
+            <span><strong>{modelUrl ? 'GLB' : 'Preview'}</strong><small>planet</small></span>
             <span><strong>{getAssetRuntime(item, generationHistory)}</strong><small>runtime</small></span>
             <span><strong>{taskId ? String(taskId).slice(0, 8) : 'none'}</strong><small>task</small></span>
           </div>
           <code className="asset-model-url">{modelUrl || item.referenceSource || item.type || 'Procedural preview only'}</code>
           <div className="asset-library-actions">
             <button type="button" onClick={() => onSelectCell(item.id)}>Open</button>
-            <button type="button" disabled={!modelUrl} onClick={() => onCopyText(modelUrl, 'Model URL copied')}>
+            <button type="button" disabled={!modelUrl} onClick={() => onCopyText(modelUrl, 'Planet Model URL copied')}>
               <Copy size={12} />
               URL
             </button>
@@ -301,15 +301,15 @@ export function WorkspaceDrawer({
             <header className="asset-section-head">
               <span>
                 <Box size={15} />
-                <strong>Generated & Imported Assets</strong>
+                <strong>Generated & Imported Planets</strong>
               </span>
               <small>{readyGeneratedAssets.length}/{generatedAssets.length} ready</small>
             </header>
             {generatedAssets.length === 0 ? (
               <div className="asset-library-empty">
                 <Image size={18} />
-                <span>No generated assets yet.</span>
-                <small>Upload an image or import a GLB from Asset Source.</small>
+                <span>No generated planets yet.</span>
+                <small>Upload an image or import a GLB from Planet Source.</small>
               </div>
             ) : (
               <div className="asset-card-grid">
@@ -333,7 +333,7 @@ export function WorkspaceDrawer({
 
           <details className="asset-library-section starter-assets">
             <summary>
-              <span>Starter procedural scenes</span>
+              <span>Starter procedural planets</span>
               <small>{starterAssets.length}</small>
             </summary>
             <div className="starter-asset-grid">
@@ -443,8 +443,8 @@ export function WorkspaceDrawer({
           <div className="history-panel">
             <div className="project-manager-head">
               <div>
-                <strong>Frontend Generation History</strong>
-                <small>{generationHistory.length} local generation records.</small>
+              <strong>Frontend Planet Model History</strong>
+              <small>{generationHistory.length} local planet model records.</small>
               </div>
               <button type="button" className="drawer-secondary" disabled={generationHistory.length === 0} onClick={onClearGenerationHistory}>Clear</button>
             </div>
@@ -623,7 +623,7 @@ export function WorkspaceDrawer({
             ))}
           </div>
           <div className="drawer-actions">
-            <button type="button" className="drawer-primary" onClick={() => onSelectCell(compareCell)}>Open Compared Model</button>
+            <button type="button" className="drawer-primary" onClick={() => onSelectCell(compareCell)}>Open Compared Planet</button>
             <button type="button" className="drawer-secondary" onClick={() => onSetCompareCell(profile.compareTarget)}>Reset Target</button>
           </div>
         </div>
@@ -636,13 +636,13 @@ export function WorkspaceDrawer({
     return (
       <div className="drawer-content">
         <div className="profile-stats">
-          <span><strong>{allCells.length}</strong><small>models</small></span>
+          <span><strong>{allCells.length}</strong><small>planets</small></span>
           <span><strong>{galleryItems.length}</strong><small>saved</small></span>
           <span><strong>{generationHistory.length}</strong><small>runs</small></span>
         </div>
         <div className="model-inspector">
           <div>
-            <strong>Model Inspector</strong>
+            <strong>Archive Data</strong>
             <small>{cell.name} · {getQualityLabel(cell)}</small>
           </div>
           <dl>
@@ -652,13 +652,13 @@ export function WorkspaceDrawer({
             <dd>{cell.generation?.provider || 'built-in'}</dd>
             <dt>Status</dt>
             <dd>{cell.generation?.status || 'interactive'}</dd>
-            <dt>Model URL</dt>
+            <dt>Planet Model URL</dt>
             <dd>{modelUrl || 'procedural scene'}</dd>
             <dt>Task</dt>
             <dd>{cell.generation?.taskId || 'none'}</dd>
           </dl>
           <div className="drawer-actions">
-            <button type="button" className="drawer-secondary" disabled={!modelUrl} onClick={() => onCopyText(modelUrl, 'Model URL copied')}>Copy URL</button>
+            <button type="button" className="drawer-secondary" disabled={!modelUrl} onClick={() => onCopyText(modelUrl, 'Planet Model URL copied')}>Copy URL</button>
             <button type="button" className="drawer-primary" disabled={!cell.custom || !cell.imageUrl} onClick={() => onRunProviderCompare(cell.id)}>Provider Compare</button>
           </div>
         </div>
@@ -679,7 +679,7 @@ export function WorkspaceDrawer({
                   {project.thumbnailUrl ? <img src={project.thumbnailUrl} alt={`${project.name} project thumbnail`} /> : <CellThumb cell={cell} />}
                   <div>
                     <strong>{project.name}</strong>
-                    <small>{project.summary || '3D Model Studio workspace'} · {formatDate(project.savedAt)}</small>
+                    <small>{project.summary || 'Celestial Archive workspace'} · {formatDate(project.savedAt)}</small>
                   </div>
                   <div className="project-actions">
                     <button type="button" onClick={() => onLoadProject(project.id)}>Load</button>
@@ -698,7 +698,7 @@ export function WorkspaceDrawer({
         <div className="history-panel">
           <div className="project-manager-head">
             <div>
-              <strong>Generation History</strong>
+              <strong>Planet Model History</strong>
               <small>Provider, duration, result, and retry context.</small>
             </div>
             <button type="button" className="drawer-secondary" disabled={generationHistory.length === 0} onClick={onClearGenerationHistory}>Clear</button>

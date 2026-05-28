@@ -1,46 +1,40 @@
-import { Bookmark, Heart, Info, Sparkles, Tags } from 'lucide-react'
+import { BookOpen, Database, Palette, Radio, Rocket, ScrollText } from 'lucide-react'
 
-import { getCell } from '../domain/cellCatalog.js'
-import { getAssetMetadata } from '../lib/assetMetadata.js'
+export function DetailPanel({ planet, archiveMode }) {
+  const basicData = [
+    ['Name', planet.name],
+    ['Type', planet.type],
+    ['Diameter', planet.diameter],
+    ['Distance from Sun', planet.distanceFromSun],
+    ['Gravity', planet.gravity],
+    ['Surface / Atmosphere', planet.atmosphere],
+    ['Temperature', planet.temperature],
+    ['Orbital Period', planet.orbitalPeriod],
+    ['Rotation Period', planet.rotationPeriod],
+    ['Moon Count', formatMoonCount(planet.moonCount)],
+    ['Magnetic Field', planet.magneticField],
+    ['Exploration Difficulty', planet.explorationDifficulty],
+  ]
 
-export function DetailPanel({ selectedCell, favoriteKey, setFavoriteKey, customCells, onNotify }) {
-  const cell = getCell(selectedCell, customCells)
-  const metadata = getAssetMetadata(cell)
-  const currentKey = `${selectedCell}:asset`
-  const isFavorite = favoriteKey === currentKey
-
-  function toggleFavorite() {
-    const next = isFavorite ? '' : currentKey
-    setFavoriteKey(next)
-    onNotify(isFavorite ? `${metadata.title} removed from favorites` : `${metadata.title} saved to favorites`)
-  }
+  const observationData = [
+    ['First Known Observation', planet.observationRecord.firstKnown],
+    ['Telescopic Observation', planet.observationRecord.telescopicObservation],
+    ['Space Missions', planet.observationRecord.spaceMissions],
+  ]
 
   return (
-    <aside className="right-rail">
-      <section className="panel detail-panel">
-        <header className="detail-title">
-          <span>
-            <Info size={14} />
-            Asset Details
-          </span>
-          <button type="button" className={isFavorite ? 'detail-fav active' : 'detail-fav'} onClick={toggleFavorite} aria-pressed={isFavorite}>
-            <Heart size={15} fill={isFavorite ? 'currentColor' : 'none'} />
-          </button>
-        </header>
-        <div className="detail-heading asset-heading">
-          <div className="cluster-icon asset-icon" style={{ '--cluster': metadata.accent }}>
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <div>
-            <h2>{metadata.title}</h2>
-            <p>{metadata.subtitle}</p>
-          </div>
-        </div>
-        <dl className="detail-grid">
-          {metadata.facts.map(([label, value]) => (
+    <aside className={archiveMode ? 'archive-panel archive-mode' : 'archive-panel'}>
+      <header className="panel-heading">
+        <span>ARCHIVE DATA</span>
+      </header>
+
+      <section className="archive-card basic-data-card">
+        <h2>
+          <Database size={16} />
+          BASIC DATA
+        </h2>
+        <dl className="data-grid">
+          {basicData.map(([label, value]) => (
             <div key={label}>
               <dt>{label}</dt>
               <dd>{value}</dd>
@@ -49,34 +43,76 @@ export function DetailPanel({ selectedCell, favoriteKey, setFavoriteKey, customC
         </dl>
       </section>
 
-      <section className="panel notes-panel">
-        <header className="panel-title">
-          <span>
-            <Bookmark size={14} />
-            Object Description
-          </span>
-        </header>
-        <p>{metadata.description}</p>
-        <blockquote>{metadata.value}</blockquote>
+      <section className="archive-card mission-card">
+        <h2>
+          <Rocket size={16} />
+          MISSION HIGHLIGHTS
+        </h2>
+        <ul className="mission-list">
+          {planet.missionHighlights.map((mission) => (
+            <li key={mission}>{mission}</li>
+          ))}
+        </ul>
       </section>
 
-      <section className="panel asset-tags-panel">
-        <header className="panel-title">
-          <span>
-            <Tags size={14} />
-            Tags
-          </span>
-        </header>
-        <div className="asset-tag-list">
-          {metadata.tags.map((tag) => (
-            <span key={tag}>{tag}</span>
+      <section className="archive-card signature-card">
+        <h2>
+          <Palette size={16} />
+          PLANETARY SIGNATURE
+        </h2>
+        <dl className="data-grid">
+          <div>
+            <dt>Surface Tag</dt>
+            <dd>{planet.surfaceTag}</dd>
+          </div>
+          <div>
+            <dt>Discovery Status</dt>
+            <dd>{planet.discoveryStatus}</dd>
+          </div>
+        </dl>
+        <div className="palette-row" aria-label={`${planet.name} visual palette`}>
+          {planet.visualPalette.map((color) => (
+            <span key={color} style={{ '--swatch': color }} />
           ))}
         </div>
-        <p>
-          <Sparkles size={13} />
-          Inferred from {metadata.insightSource}.
-        </p>
+      </section>
+
+      <section className="archive-card narrative-card">
+        <h2>
+          <BookOpen size={16} />
+          NAMING ORIGIN
+        </h2>
+        <p>{planet.namingOrigin}</p>
+      </section>
+
+      <section className="archive-card narrative-card">
+        <h2>
+          <ScrollText size={16} />
+          ARCHIVE NOTE
+        </h2>
+        <p>{planet.archiveNote}</p>
+      </section>
+
+      <section className="archive-card">
+        <h2>
+          <Radio size={16} />
+          OBSERVATION RECORD
+        </h2>
+        <dl className="data-grid observation-grid">
+          {observationData.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
     </aside>
   )
+}
+
+function formatMoonCount(moonCount) {
+  if (!moonCount) return 'No major moons'
+  if (moonCount === 1) return '1 moon'
+  return `${moonCount} moons`
 }

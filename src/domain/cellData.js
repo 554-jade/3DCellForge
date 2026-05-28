@@ -1,20 +1,20 @@
 import plantCellRender from '../assets/cell-plant-render.png'
 
 export const CELL_TYPES = [
-  { id: 'plant', name: 'Plant Specimen', type: 'Starter Asset', accent: '#82b366' },
-  { id: 'white-blood', name: 'Immune Specimen', type: 'Starter Asset', accent: '#7e6edb' },
-  { id: 'neuron', name: 'Neuron Specimen', type: 'Starter Asset', accent: '#8b5cf6' },
-  { id: 'epithelial', name: 'Tissue Specimen', type: 'Starter Asset', accent: '#e07a7a' },
-  { id: 'bacteria', name: 'Microbe Specimen', type: 'Starter Asset', accent: '#5fbf9f' },
-  { id: 'animal', name: 'Organic Specimen', type: 'Starter Asset', accent: '#459ccf' },
-  { id: 'muscle', name: 'Fiber Specimen', type: 'Starter Asset', accent: '#d25762' },
+  { id: 'plant', name: 'Plant Specimen', type: 'Starter Planet', accent: '#82b366' },
+  { id: 'white-blood', name: 'Immune Specimen', type: 'Starter Planet', accent: '#7e6edb' },
+  { id: 'neuron', name: 'Neuron Specimen', type: 'Starter Planet', accent: '#8b5cf6' },
+  { id: 'epithelial', name: 'Tissue Specimen', type: 'Starter Planet', accent: '#e07a7a' },
+  { id: 'bacteria', name: 'Microbe Specimen', type: 'Starter Planet', accent: '#5fbf9f' },
+  { id: 'animal', name: 'Organic Specimen', type: 'Starter Planet', accent: '#459ccf' },
+  { id: 'muscle', name: 'Fiber Specimen', type: 'Starter Planet', accent: '#d25762' },
 ]
 
 export const SEEDED_GENERATED_CELLS = [
   {
     id: 'tripo-epithelial-test',
     name: 'Tripo Tissue Test',
-    type: 'Cached AI Asset',
+    type: 'Cached AI Planet',
     accent: '#e07a7a',
     custom: true,
     template: 'epithelial',
@@ -31,7 +31,7 @@ export const SEEDED_GENERATED_CELLS = [
   {
     id: 'tripo-plant-test',
     name: 'Tripo Plant Test',
-    type: 'Cached AI Asset',
+    type: 'Cached AI Planet',
     accent: '#82b366',
     custom: true,
     template: 'plant',
@@ -154,17 +154,17 @@ export const ORGANELLES = {
     size: 'Full object boundary',
     location: 'Model perimeter',
     visible: 'Always visible',
-    note: 'The surface shell is the most important quality signal. If the silhouette reads correctly, the model will work better for screenshots and demos.',
+    note: 'The surface shell is the most important quality signal. If the silhouette reads correctly, the planet model will work better for screenshots and presentations.',
     accent: '#7aa4bf',
   },
   granules: {
-    label: 'Detail Points',
-    title: 'Detail Points',
+    label: 'Archive Points',
+    title: 'Archive Points',
     subtitle: 'Small high-frequency geometry',
     size: 'Fine detail marks',
     location: 'Surface and recessed areas',
     visible: 'Visible when zoomed in',
-    note: 'Detail points reveal whether the generator created real dimensional cues rather than a smooth blob or flat card.',
+    note: 'Archive points reveal whether the generator created real dimensional cues rather than a smooth blob or flat card.',
     accent: '#5b82c4',
   },
 }
@@ -179,12 +179,12 @@ export const MICROSCOPE_IMAGES = [
 
 export const WORKSPACE_PANELS = {
   Gallery: 'Saved render angles, thumbnails, and exported presentation shots.',
-  Library: 'Starter models, generated assets, local imports, and reference GLB files.',
-  Notebooks: 'Observation notes linked to the selected asset and inspection part.',
+  Library: 'Starter planets, generated planets, local imports, and reference GLB files.',
+  Notebooks: 'Observation notes linked to the selected planet and archive data.',
   Logs: 'Diagnostics, API request logs, and generation troubleshooting.',
   Settings: 'Viewer quality, provider defaults, screenshot size, and export preferences.',
-  Compare: 'Side-by-side model comparison for shape, material, and generation quality.',
-  Profile: 'Current workspace: 3D Model Studio.',
+  Compare: 'Side-by-side planet comparison for shape, material, and generation quality.',
+  Profile: 'Current workspace: Celestial Archive.',
 }
 
 export const CELL_PROFILES = {

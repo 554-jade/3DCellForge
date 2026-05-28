@@ -7,7 +7,7 @@ export function getAssetMetadata(cell = {}) {
   const provider = getAssetProviderLabel(cell)
   const status = normalizeStatus(cell)
   const motion = inferMotionProfile(cell)
-  const title = cell.fullName || cell.name || 'Untitled Asset'
+  const title = cell.fullName || cell.name || 'Untitled Planet'
   const task = cell.generation?.taskId ? String(cell.generation.taskId).slice(0, 14) : 'none'
   const source = getSourceLabel(cell)
 
@@ -15,7 +15,7 @@ export function getAssetMetadata(cell = {}) {
     title,
     subtitle: category.label,
     accent: cell.accent || '#72a4bf',
-    insightSource: cell.intelligence?.configured ? `${cell.intelligence.provider || 'AI'} vision analysis` : 'asset name, source file, and generation metadata',
+    insightSource: cell.intelligence?.configured ? `${cell.intelligence.provider || 'AI'} vision analysis` : 'planet name, source file, and generation metadata',
     facts: [
       ['Category', category.label],
       ['Source', source],
@@ -38,7 +38,7 @@ function buildDescription(cell, category, scene) {
   }
 
   const modelState = cell.generation?.modelUrl
-    ? 'A generated GLB is available, so the viewer is showing the actual cached 3D model.'
+    ? 'A generated GLB is available, so the viewer is showing the actual cached planet model.'
     : cell.generation?.provider === 'cinematic'
     ? 'This is currently a browser-side depth preview rather than a full GLB mesh.'
     : 'The viewer may use a procedural preview until the generated GLB is ready.'
@@ -48,10 +48,10 @@ function buildDescription(cell, category, scene) {
 
 function buildValue(cell, category, scene, motion) {
   const material = `Material focus: ${category.material}.`
-  const structure = `Inspection focus: ${category.inspectionFocus}.`
+  const structure = `Archive Data focus: ${category.inspectionFocus}.`
   const demo = `Recommended presentation: ${motion.label}. ${scene.summary} ${category.value}`
   const warning = cell.generation?.status === 'failed'
-    ? ' Current generation failed, so this asset should not be used for a final demo until retried.'
+    ? ' Current generation failed, so this planet should not be used for a final presentation until retried.'
     : ''
 
   return `${material} ${structure} ${demo}${warning}`
@@ -61,7 +61,7 @@ function getSourceLabel(cell) {
   if (cell.reference) return 'Khronos reference model'
   if (cell.generation?.provider === 'local') return 'Local GLB import'
   if (cell.imageUrl || cell.thumbnailUrl) return 'Uploaded reference image'
-  if (cell.custom) return 'Generated workspace asset'
+  if (cell.custom) return 'Generated workspace planet'
   return 'Built-in starter scene'
 }
 

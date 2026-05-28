@@ -92,8 +92,9 @@ class TextureBoundary extends Component {
 }
 
 function TexturedPlanetScene({ planet, presentationMode }) {
-  const loadedTexture = useTexture(planet.textureUrl)
-  const texture = usePreparedTexture(loadedTexture, planet.textureUrl)
+  const textureUrl = resolvePublicAssetUrl(planet.textureUrl)
+  const loadedTexture = useTexture(textureUrl)
+  const texture = usePreparedTexture(loadedTexture, textureUrl)
 
   if (planet.id === 'saturn') {
     return <TexturedSaturnScene planet={planet} presentationMode={presentationMode} texture={texture} />
@@ -103,8 +104,9 @@ function TexturedPlanetScene({ planet, presentationMode }) {
 }
 
 function TexturedSaturnScene({ planet, presentationMode, texture }) {
-  const loadedRingTexture = useTexture('/textures/saturn-ring.png')
-  const ringTexture = usePreparedTexture(loadedRingTexture, '/textures/saturn-ring.png')
+  const ringTextureUrl = resolvePublicAssetUrl('/textures/saturn-ring.png')
+  const loadedRingTexture = useTexture(ringTextureUrl)
+  const ringTexture = usePreparedTexture(loadedRingTexture, ringTextureUrl)
 
   return <PlanetScene planet={planet} presentationMode={presentationMode} texture={texture} ringTexture={ringTexture} />
 }
@@ -317,6 +319,17 @@ function formatMoonCount(moonCount) {
   if (!moonCount) return 'No major moons'
   if (moonCount === 1) return '1 moon'
   return `${moonCount} moons`
+}
+
+function resolvePublicAssetUrl(assetUrl) {
+  if (!assetUrl) return ''
+  if (/^https?:\/\//.test(assetUrl)) return assetUrl
+
+  const baseUrl = import.meta.env.BASE_URL || '/'
+  const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+  const cleanAsset = assetUrl.startsWith('/') ? assetUrl.slice(1) : assetUrl
+
+  return `${cleanBase}${cleanAsset}`
 }
 
 function usePreparedTexture(texture, textureUrl) {
